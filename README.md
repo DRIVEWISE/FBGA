@@ -7,6 +7,25 @@ The library is able to compute the maximum performance longitudinal maneuver giv
 
 For usage details, please refer to the [FBGA Usage Guide](FBGA_Usage_Guide.md).
 
+Cite as:
+
+```{bibtex}
+@article{piazza2025real,
+  title={Real-Time Velocity Profile Optimization for Time-Optimal Maneuvering With Generic Acceleration Constraints},
+  author={Piazza, Mattia and Piccinini, Mattia and Taddei, Sebastiano and Biral, Francesco and Bertolazzi, Enrico},
+  journal={IEEE Robotics and Automation Letters},
+  volume={11},
+  number={2},
+  pages={1674--1681},
+  year={2025},
+  publisher={IEEE}
+}
+```
+<!-- download the bib -->
+[__Download the bib__](bibtex.bib)
+
+
+
 ## Requirements
 
 ### General
