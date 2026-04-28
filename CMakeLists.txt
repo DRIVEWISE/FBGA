@@ -26,6 +26,8 @@ project(
   HOMEPAGE_URL "https://github.com/XXXXX/GIGI"
 )
 
+option(GIGI_BUILD_TESTS "Build GIGI test executables" ON)
+
 
 #   ___
 #  / __| ___ _  _ _ _ __ ___ ___
@@ -120,22 +122,24 @@ else()
   set( LIBS ${LIBS} ws2_32 iphlpapi kernel32 )
 endif()
 
-file(GLOB EXELISTCPP_WEXT src_tests/GIGI_test_*.cc)
+if(GIGI_BUILD_TESTS)
+  file(GLOB EXELISTCPP_WEXT src_tests/GIGI_test_*.cc)
 
-set(EXELISTCPP)
-foreach(FILE ${EXELISTCPP_WEXT})
-  get_filename_component(FILENAME ${FILE} NAME_WE)
-  list(APPEND EXELISTCPP ${FILENAME})
-endforeach()
+  set(EXELISTCPP)
+  foreach(FILE ${EXELISTCPP_WEXT})
+    get_filename_component(FILENAME ${FILE} NAME_WE)
+    list(APPEND EXELISTCPP ${FILENAME})
+  endforeach()
 
-add_custom_target( "${PROJECT_NAME}_all_tests" ALL )
+  add_custom_target( "${PROJECT_NAME}_all_tests" ALL )
 
-set( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin )
-foreach( S ${EXELISTCPP} )
-  add_executable( ${S} ${CMAKE_CURRENT_SOURCE_DIR}/src_tests/${S}.cc )
-  target_link_libraries( ${S} ${LIBS} thirdparty )
-  set_target_properties( ${S} PROPERTIES SUFFIX ".exe" )
-  add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
-  add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
-endforeach()
+  set( EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin )
+  foreach( S ${EXELISTCPP} )
+    add_executable( ${S} ${CMAKE_CURRENT_SOURCE_DIR}/src_tests/${S}.cc )
+    target_link_libraries( ${S} ${LIBS} thirdparty )
+    set_target_properties( ${S} PROPERTIES SUFFIX ".exe" )
+    add_test( NAME "${S}" COMMAND ./bin/${S}.exe WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} )
+    add_dependencies( "${PROJECT_NAME}_all_tests" ${S} )
+  endforeach()
+endif()
 

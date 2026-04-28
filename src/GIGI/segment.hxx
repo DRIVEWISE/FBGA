@@ -29,6 +29,9 @@ namespace GG
     real m_L{0};
     real m_k0{0};
     real m_k1{0};
+    real m_T{-1.0}; // Total time
+    real m_T0{-1.0}; // Total time
+    real m_T1{-1.0}; // Total time
     SegmentType m_type{UNKNOWN};
   public:
     // constructors
@@ -84,6 +87,25 @@ namespace GG
     [[nodiscard]] real AYF() const { return this->m_k1 * std::pow(this->VF(),2); }
     // eval t (generic)
     static real eval_t(const real s, const real a, const real v0) { return static_cast<real>(2)*s / (v0 + eval_v(s,a,v0)); }
+    [[nodiscard]] real S(const real t_tot) const 
+    { 
+      real const t = t_tot - this->m_T0;
+      return 1.0/2.0*this->m_a*t*t + this->m_v0*t + this->m_s0;
+    }
+    void set_T0(const real T0) { this->m_T0 = T0; }
+    void set_T1(const real T1) { this->m_T1 = T1;}
+    void set_T (const real T) { this->m_T = T; }
+    void set_times(const real T0)
+    {
+      real const T = this->T();
+      this->set_T0(T0);
+      this->set_T1(T0 + T);
+      this->set_T(T);
+    }
+    [[nodiscard]] real getT() const { return this->m_T; }
+    [[nodiscard]] real getT0() const { return this->m_T0; }
+    [[nodiscard]] real getT1() const { return this->m_T1; }
+    
   };
 
 
