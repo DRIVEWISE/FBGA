@@ -36,12 +36,13 @@ namespace GG
     return std::min(std::max(x, a), b);
   }
 
+
   real square_conversion(const real a, const real amin, const real amax)
   {
       constexpr real eps = 1e-6;
       constexpr real max_output = 10.0; // or 1.0, 5.0 — adjust based on how extreme values you tolerate
 
-      real norm = 2.0 * (a - amin) / std::max(amax - amin, eps) - 1.0;
+    const real norm = 2.0 * (a - amin) / std::max(amax - amin, eps) - 1.0;
 
       return std::clamp(norm, -max_output, max_output);;
   }
@@ -54,7 +55,7 @@ namespace GG
   }
 
 
-
+  #define STD_NUM_DIFF true
 
   void 
   computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx)
@@ -84,16 +85,26 @@ namespace GG
   {
     std::vector<real> dY_dx;
     dY_dx.resize(X.size());
-
+    #if STD_NUM_DIFF
     // Compute the finite difference of Y with respect to X
     for (size_type i = 0; i < X.size() - 1; ++i)
     {
       dY_dx[i] = (Y[i + 1] - Y[i]) / (X[i + 1] - X[i]);
     }
     dY_dx.back() = dY_dx[dY_dx.size() - 2]; // Last value is the same as the second last
-    
+    #else
+    dY_dx[0] = (Y[1] - Y[0]) / (X[1] - X[0]); // Forward difference for the first point
+    dY_dx.back() = (Y[Y.size() - 1] - Y[Y.size() - 2]) / (X[X.size() - 1] - X[X.size() - 2]); // Backward difference for the last point
+    for (size_type i = 0; i < X.size() - 1; ++i)
+    {
+      dY_dx[i] = (Y[i + 1] - Y[i- 1]) / (X[i + 1] - X[i - 1]);
+    }
+
+    #endif
     return dY_dx;
   }
+
+
 
 
   void
@@ -132,13 +143,11 @@ namespace GG
       {
         for (integer j = 0; j < this->m_ny; ++j)
         {
-          z_transposed[(j * this->m_nx) + i] = this->m_z[(i * this->m_ny) + j];
+          z_transposed[i * this->m_ny + j] = this->m_z[j * this->m_nx + i];
         }
       }
       this->m_z = z_transposed;
     }
-
-
   }
 
 
@@ -157,23 +166,18 @@ namespace GG
     const size_type i = findInterval(this->m_x, xi);
     const size_type j = findInterval(this->m_y, yi);
 
-    // const size_type i = findIntervalWithGuess(this->m_x, xi, this->m_memory_idx_x);
-    // const size_type j = findIntervalWithGuess(this->m_y, yi, this->m_memory_idx_y);
-    // // update memory indices
-    // this->m_memory_idx_x = i;
-    // this->m_memory_idx_y = j;
-
-
+    const size_type base_idx = i * this->m_ny;
+    const size_type next_base_idx = (i + 1) * this->m_ny;
 
     // Corners
-    const real x0 = this->m_x[i];
-    const real x1 = this->m_x[i + 1];
-    const real y0 = this->m_y[j];
-    const real y1 = this->m_y[j + 1];
-    const real z00 = this->m_z[(i * this->m_nx) + j];
-    const real z10 = this->m_z[((i + 1) * this->m_nx) + j];
-    const real z01 = this->m_z[(i * this->m_nx) + (j + 1)];
-    const real z11 = this->m_z[((i + 1) * this->m_nx) + (j + 1)];
+    const real x0  = this->m_x[i];
+    const real x1  = this->m_x[i + 1];
+    const real y0  = this->m_y[j];
+    const real y1  = this->m_y[j + 1];
+    const real z00 = this->m_z[base_idx + j];
+    const real z10 = this->m_z[next_base_idx + j];
+    const real z01 = this->m_z[base_idx + (j + 1)];
+    const real z11 = this->m_z[next_base_idx + (j + 1)];
 
     // delta normalized
     const real tx = (xi - x0) / (x1 - x0);
@@ -188,7 +192,6 @@ namespace GG
   size_type 
   findInterval(const std::vector<real>& vec, real value) 
   {
-   
     size_type seg = 0;
     
     if (value >= vec.front() && value <= vec.back())
@@ -251,9 +254,7 @@ namespace GG
 
     return seg;
 
-
     // Use the guess to find the interval
-   
   }
   
 
@@ -278,7 +279,6 @@ namespace GG
         return mid; // Found exact match
       }
     }
-
     return high; // Return the index of the largest element less than or equal to value
   }
 
@@ -418,6 +418,23 @@ namespace GG
 
     // Linear interpolation formula
     return (1 - tx) * y0 + tx * y1;
+  }
+
+
+
+  void linspace(std::vector<GG::real> & vec, const GG::real x1, const GG::real x2, GG::integer N) 
+  {
+    vec.resize(N);
+    if (N == 1) 
+    {
+      vec[0] = x1;
+    }
+    else 
+    {
+      const GG::real h = (x2 - x1) / (N - 1);
+      std::generate(vec.begin(), vec.end(),
+                    [x = x1 - h, h]() mutable {x += h; return x;});
+    }
   }
 
 }

@@ -88,14 +88,17 @@ public:
 private:
   std::vector<real> m_x, m_y, m_z;
   integer m_nx{0}, m_ny{0};
-  size_type m_memory_idx_x{0}, m_memory_idx_y{0};
+  // size_type m_memory_idx_x{0}, m_memory_idx_y{0};
 
 };
 
 void computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx);
 std::vector<real> computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y);
 
+void linspace(std::vector<GG::real> & vec, const GG::real x1, const GG::real x2, GG::integer N);
 
 }
+
+
 
 #endif
