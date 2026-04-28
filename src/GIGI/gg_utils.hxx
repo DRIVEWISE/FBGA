@@ -4,6 +4,7 @@
 #include "types.hxx"
 
 #include <vector>
+#include <string>
 
 
 namespace GG
