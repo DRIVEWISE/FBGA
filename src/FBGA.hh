@@ -1,7 +1,7 @@
 /*
 (***********************************************************************************)
 (*                                                                                 *)
-(* The GIGI project                                                               *)
+(* The FBGA project                                                               *)
 (*                                                                                 *)
 (* Copyright (c) 2025, Mattia Piazza                                               *)
 (*                                                                                 *)
@@ -14,33 +14,33 @@
 */
 
 ///
-/// file: GIGI.hh
+/// file: FBGA.hh
 ///
 
 #pragma once
 
-#ifndef INCLUDE_GIGI
-#define INCLUDE_GIGI
+#ifndef INCLUDE_FBGA
+#define INCLUDE_FBGA
 
 
-// Print GIGI errors
-#ifndef GIGI_ERROR
-#define GIGI_ERROR(MSG)                                                                           \
+// Print FBGA errors
+#ifndef FBGA_ERROR
+#define FBGA_ERROR(MSG)                                                                           \
   {                                                                                                \
     throw std::runtime_error(std::to_string(MSG));                                                 \
   }
 #endif
 
-// Check for GIGI errors
-#ifndef GIGI_ASSERT
-#define GIGI_ASSERT(COND, MSG)                                                                    \
+// Check for FBGA errors
+#ifndef FBGA_ASSERT
+#define FBGA_ASSERT(COND, MSG)                                                                    \
   if (!(COND))                                                                                     \
-  GIGI_ERROR(MSG)
+  FBGA_ERROR(MSG)
 #endif
 
 
 #endif
 
 ///
-/// eof: GIGI.hh
+/// eof: FBGA.hh
 ///

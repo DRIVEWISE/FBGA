@@ -1,4 +1,4 @@
-#include "./GIGI/brentdekker.hxx"
+#include "./FBGA/brentdekker.hxx"
 
 
 #define DEBUG_IO 0

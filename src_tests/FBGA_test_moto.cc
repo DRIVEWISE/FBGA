@@ -2,9 +2,9 @@
 #include <fstream>
 #include <iostream>
 
-#include "GIGI/FWBW.hxx"
-#include "GIGI/gg_utils.hxx"
-#include "GIGI/types.hxx"
+#include "FBGA/FWBW.hxx"
+#include "FBGA/gg_utils.hxx"
+#include "FBGA/types.hxx"
 
 #include "rapidcsv.h"
 
@@ -149,7 +149,7 @@ GG::real ax_max_adherence(GG::real ayg, GG::real v, const AeroData& aero_data) {
 int main(int argc, char *argv[])
 {
   // Parse command line arguments
-  cxxopts::Options options("GIGI");
+  cxxopts::Options options("FBGA");
   options.add_options()
     ("h,help", "Print help")
     ("c,circuit", "Circuit name", cxxopts::value<std::string>()->default_value("Catalunya"));

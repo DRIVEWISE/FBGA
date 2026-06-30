@@ -1,7 +1,7 @@
 #!/bin/bash
 
 : '
-This file is used to build the GIGI package.
+This file is used to build the FBGA package.
 '
 
 # Get the path where the user launched this script
@@ -83,7 +83,7 @@ if [ "$TARGET_ALL" = true ]; then
     fi
   fi
   if [ "$BUILD" = true ]; then
-    echo "${YELLOW}Compiling and build project GIGI${NORMAL}"
+    echo "${YELLOW}Compiling and build project FBGA${NORMAL}"
     mkdir -p build
     cd build
     cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..

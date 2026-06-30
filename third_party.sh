@@ -1,7 +1,7 @@
 #!/bin/bash
 
 : '
-This file is used to install the dependencies for the GIGI package.
+This file is used to install the dependencies for the FBGA package.
 '
 
 # Get the path where the user launched this script
@@ -74,14 +74,5 @@ fi
 
 cd "$ROOT_SCRIPT_DIR/third_party"
 
-# download gnuplot header only https://github.com/ziotom78/gplotpp.git
-if [ ! -d "gplotpp" ]; then
-  echo "${YELLOW}Downloading gplotpp${NORMAL}"
-  git clone --branch master --depth 1 https://github.com/ziotom78/gplotpp.git
-  echo "${YELLOW}gplotpp is header-only, no need to compile${NORMAL}"
-else
-  echo "${YELLOW}gplotpp already installed${NORMAL}"
-fi
 
-cd "$ROOT_SCRIPT_DIR/third_party"
 
