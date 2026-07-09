@@ -1,5 +1,5 @@
 """
-Tests for the fbga_py bindings, mirroring src_tests/GIGI_test_basic.cc
+Tests for the fbga_py bindings, mirroring src_tests/FBGA_test_basic.cc
 (friction-circle G-G bounds driving the FWBW forward-backward solver).
 """
 

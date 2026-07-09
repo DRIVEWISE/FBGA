@@ -2,8 +2,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/functional.h>
 
-#include "GIGI/types.hxx"
-#include "GIGI/FWBW.hxx"
+#include "FBGA/types.hxx"
+#include "FBGA/FWBW.hxx"
 
 namespace py = pybind11;
 using namespace GG;

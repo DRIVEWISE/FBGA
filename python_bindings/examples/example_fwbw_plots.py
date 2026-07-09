@@ -3,7 +3,7 @@
 Example: use the FWBW solver from Python with lambda-defined G-G bounds,
 and plot the resulting velocity/acceleration profiles and the G-G diagram.
 
-Scenario mirrors src_tests/GIGI_test_basic.cc (friction-circle bounds).
+Scenario mirrors src_tests/FBGA_test_basic.cc (friction-circle bounds).
 """
 
 import math
