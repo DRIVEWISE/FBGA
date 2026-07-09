@@ -1,0 +1,9 @@
+# PEP 518: Specifies build system requirements for Python projects.
+# This tells pip that it needs setuptools and pybind11 to even start
+# the build process.
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "pybind11>=2.10"
+]
+build-backend = "setuptools.build_meta"

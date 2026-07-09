@@ -446,10 +446,11 @@ void FWBW::evaluate(
     );
     if (segment_it != this->Segments.end())
     {
-      // Populate AX, AY, and V using the found segment
-      AX[i] = segment_it->AX(s);
-      AY[i] = segment_it->AY(s);
-      V[i]  = segment_it->V(s);
+      // Populate AX, AY, and V using the found segment (s relative to segment start)
+      const real s_rel = s - segment_it->s0();
+      AX[i] = segment_it->AX(s_rel);
+      AY[i] = segment_it->AY(s_rel);
+      V[i]  = segment_it->V(s_rel);
     }
     else
     {

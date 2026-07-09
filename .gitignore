@@ -57,3 +57,13 @@ src_tests/Z*
 
 data/output_*.txt
 
+# Python bindings build artifacts
+python_bindings/build/
+python_bindings/*.so
+python_bindings/*.egg-info/
+python_bindings/fwbw_example_plots.png
+python_bindings/fwbw_example_3d.png
+__pycache__/
+*.pyc
+.pytest_cache/
+

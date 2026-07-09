@@ -1,0 +1,14 @@
+name: vprim_py_env
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  # pybind11 is a build-time dependency for setup.py
+  - pybind11
+  # Dependencies for running examples
+  - numpy
+  - matplotlib
+  # Compilers needed to build the C++ extension
+  - c-compiler
+  - cxx-compiler
