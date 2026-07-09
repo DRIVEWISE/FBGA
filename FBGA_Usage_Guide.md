@@ -86,8 +86,8 @@ GG::FWBW fbga(
 ## Basic Usage Example
 
 ```cpp
-#include "GIGI/FWBW.hxx"
-#include "GIGI/types.hxx"
+#include "FBGA/FWBW.hxx"
+#include "FBGA/types.hxx"
 
 int main() {
     // 1. Define track data

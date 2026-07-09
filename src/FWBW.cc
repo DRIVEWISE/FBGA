@@ -1,5 +1,5 @@
-#include "GIGI/FWBW.hxx"
-#include "GIGI/gg_utils.hxx"
+#include "FBGA/FWBW.hxx"
+#include "FBGA/gg_utils.hxx"
 #include <chrono>
 
 #define DEBUG_FB 0

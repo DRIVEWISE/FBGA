@@ -1,7 +1,7 @@
 /*
 (***********************************************************************************)
 (*                                                                                 *)
-(* The GIGI project                                                               *)
+(* The FBGA project                                                               *)
 (*                                                                                 *)
 (* Copyright (c) 2025, Mattia Piazza                                               *)
 (*                                                                                 *)
@@ -60,6 +60,6 @@ namespace GG
   static constexpr real DEG2RAD = PIDIV180;                               //!< Degrees to Gradians static constant value
   static constexpr real RAD2DEG = 1.0 / DEG2RAD;                          //!< Gradians to Degrees static constant value
 
-} // namespace GIGI
+} // namespace FBGA
 
 #endif // TYPES_HXX

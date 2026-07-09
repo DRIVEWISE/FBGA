@@ -16,17 +16,17 @@ macro(find_and_log package)
     message(STATUS "Package ${package} found at ${${package}_DIR}")
 endmacro()
 
-project( GIGI )
+project( FBGA )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 
 project(
   ${PROJECT_NAME}
   VERSION ${UTILS_PROJECT_VERSION}
-  HOMEPAGE_URL "https://github.com/XXXXX/GIGI"
+  HOMEPAGE_URL "https://github.com/XXXXX/FBGA"
 )
 
-option(GIGI_BUILD_TESTS "Build GIGI test executables" ON)
+option(FBGA_BUILD_TESTS "Build FBGA test executables" ON)
 
 
 #   ___
@@ -122,8 +122,8 @@ else()
   set( LIBS ${LIBS} ws2_32 iphlpapi kernel32 )
 endif()
 
-if(GIGI_BUILD_TESTS)
-  file(GLOB EXELISTCPP_WEXT src_tests/GIGI_test_*.cc)
+if(FBGA_BUILD_TESTS)
+  file(GLOB EXELISTCPP_WEXT src_tests/FBGA_test_*.cc)
 
   set(EXELISTCPP)
   foreach(FILE ${EXELISTCPP_WEXT})

@@ -1,8 +1,8 @@
 #include <cmath>
 #include <iostream>
 
-#include "GIGI/FWBW.hxx"
-#include "GIGI/types.hxx"
+#include "FBGA/FWBW.hxx"
+#include "FBGA/types.hxx"
 
 int main() {
   std::cout << "FBGA - Forward Backward Generic Acceleration constraints\n";

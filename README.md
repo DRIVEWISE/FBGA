@@ -88,5 +88,5 @@ make -j
 To run the tests you can use the following command:
 
 ```{shell}
-./bin/GIGI_test_moto.exe
+./bin/FBGA_test_moto.exe
 ```
