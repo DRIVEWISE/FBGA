@@ -111,7 +111,10 @@ GggvIndy::a_x_push(real ay_tilde, real V, real az_tilde, real alpha) const
   const real a_x_eng = this->a_x_eng(V);
   const real ay_tilde_abs = std::abs(ay_tilde);
   const real ay_tilde_absclip = std::min(ay_tilde_abs, a_y_lim);
-  if (std::abs(ay_tilde_abs - a_y_lim) < 1e-12)
+  // Matches SolverParams::tolerance's default (1e-10), not the 1e-12 gggv_INDY::a_x_push used in
+  // FBGA_3D -- that version was never actually called by FBGA_INDY, which used this wider margin
+  // in its own inline blend instead. See FBGA3D_INTEGRATION_PLAN.md.
+  if (std::abs(ay_tilde_abs - a_y_lim) < 1e-10)
   {
     return std::min(0.0, a_x_eng);
   }
@@ -130,7 +133,10 @@ GggvIndy::a_x_pull(real ay_tilde, real V, real az_tilde, real alpha) const
   const real ay_tilde_abs = std::abs(ay_tilde);
   const real ay_tilde_absclip = std::min(ay_tilde_abs, a_y_lim);
 
-  if (std::abs(ay_tilde_abs - a_y_lim) < 1e-12)
+  // Matches SolverParams::tolerance's default (1e-10), not the 1e-12 gggv_INDY::a_x_push used in
+  // FBGA_3D -- that version was never actually called by FBGA_INDY, which used this wider margin
+  // in its own inline blend instead. See FBGA3D_INTEGRATION_PLAN.md.
+  if (std::abs(ay_tilde_abs - a_y_lim) < 1e-10)
   {
     return std::max(0.0, alpha * a_x_min_raw);
   }

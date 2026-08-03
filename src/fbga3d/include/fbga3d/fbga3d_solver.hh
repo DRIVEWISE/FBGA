@@ -383,6 +383,9 @@ private:
   void compute_Vmax()
   {
     constexpr real k_small = 1e-6;
+    // Deliberate deviation from FBGA_3D: FBGA_INDY/FBGA_MOTO both hardcoded this bracket to a
+    // literal 130, so set_max_velocity() had no effect here at all (only on the initial-velocity
+    // fallback in compute()). Confirmed and approved -- see FBGA3D_INTEGRATION_PLAN.md.
     const real v_top_speed = std::min(VMAX, this->max_velocity);
     real vmax = QUIET_NAN;
     for (auto &node : this->Nodes)
