@@ -238,9 +238,9 @@ void Fb2d::FW()
     this->Segments[i] = Segment(S0, L0, v0, k0, k1);
     const real ay0     = this->Segments[i].AY0();
     const real v1tmp = this->Vmax_vec[i + 1];
-    const real ay1max = k1 * v1tmp * v1tmp;
+    // const real ay1max = k1 * v1tmp * v1tmp;
     const real ay0clip = clip(ay0, this->gg_range.min(v0), this->gg_range.max(v0));
-    const real ay1maxclip = clip(ay1max, this->gg_range.min(v1tmp), this->gg_range.max(v1tmp));
+    // const real ay1maxclip = clip(ay1max, this->gg_range.min(v1tmp), this->gg_range.max(v1tmp));
     // real axmax0  = std::min( this->gg_Upper(ay0clip, v0) , this->gg_Upper(ay1maxclip, this->gg_range.max(v1tmp)) );
     real axmax0  = this->gg_Upper(ay0clip, v0) ;
     const real axmin0  = this->gg_Lower(ay0clip, v0);

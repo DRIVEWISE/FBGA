@@ -2,6 +2,7 @@ add_library(fbga)
 add_library(fbga::fbga ALIAS fbga)
 
 target_link_libraries(fbga PUBLIC fbga::utils fbga::solvers)
+target_link_libraries(fbga PRIVATE $<BUILD_INTERFACE:project_warnings>)
 
 target_sources(
   fbga

@@ -1,6 +1,8 @@
 add_library(utils)
 add_library(fbga::utils ALIAS utils)
 
+target_link_libraries(utils PRIVATE $<BUILD_INTERFACE:project_warnings>)
+
 target_sources(
   utils
   PRIVATE

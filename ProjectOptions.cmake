@@ -7,3 +7,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(FBGA_BUILD_TESTS "Build Catch2 unit tests" ON)
 option(FBGA_BUILD_EXAMPLES "Build usage examples" ON)
 option(FBGA_BUILD_PYTHON "Build pybind11 module" ON)
+option(FBGA_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
+
+# Compiler warnings, exposed as an INTERFACE target so every in-repo target can opt
+# in via `target_link_libraries(<target> PRIVATE project_warnings)` without forcing
+# these flags onto fetched third-party dependencies (Catch2, cxxopts, rapidcsv, ...).
+add_library(project_warnings INTERFACE)
+
+if(MSVC)
+  target_compile_options(project_warnings INTERFACE /W4)
+  if(FBGA_WARNINGS_AS_ERRORS)
+    target_compile_options(project_warnings INTERFACE /WX)
+  endif()
+else()
+  target_compile_options(project_warnings INTERFACE -Wall -Wextra)
+  if(FBGA_WARNINGS_AS_ERRORS)
+    target_compile_options(project_warnings INTERFACE -Werror)
+  endif()
+endif()

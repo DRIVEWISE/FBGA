@@ -23,9 +23,28 @@ endif()
 
 include(CMakePackageConfigHelpers)
 
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/FBGAConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/FBGAConfig.cmake
+  INSTALL_DESTINATION lib/cmake/FBGA
+)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/FBGAConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
 install(
   EXPORT FBGATargets
   FILE FBGATargets.cmake
   NAMESPACE fbga::
+  DESTINATION lib/cmake/FBGA
+)
+
+install(
+  FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/FBGAConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/FBGAConfigVersion.cmake
   DESTINATION lib/cmake/FBGA
 )
