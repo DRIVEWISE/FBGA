@@ -1,16 +1,16 @@
-#include "./FBGA/gg_utils.hxx"
-#include "FBGA/types.hxx"
+#include <utils/gg_utils.hh>
+#include <utils/types.hh>
 #include <algorithm>
 #include <stdexcept>
 
 #include <iostream>
 
 
-namespace GG
+namespace fb::utils
 {
   real piramid(const real x, const real y)
   {
-    //        piramid function 
+    //        piramid function
     //        + + + + + + +
     //        +   _____   +
     //        +  | --- |  +
@@ -27,10 +27,10 @@ namespace GG
     //      (return)  ^    .
     //                |   . (b)
     //                |  _____
-    //                | /     
+    //                | /
     //         _______ /_________> (x)
     //                /|
-    //         _____/ |    
+    //         _____/ |
     //         (a) .  |
     //            .
     return std::min(std::max(x, a), b);
@@ -57,8 +57,8 @@ namespace GG
 
   #define STD_NUM_DIFF true
 
-  void 
-  computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx)
+  void
+  compute_finite_difference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx)
   {
     dY_dx.resize(X.size());
     #if STD_NUM_DIFF
@@ -80,8 +80,8 @@ namespace GG
   }
 
 
-  std::vector<real> 
-  computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y)
+  std::vector<real>
+  compute_finite_difference(const std::vector<double>& X, const std::vector<double>& Y)
   {
     std::vector<real> dY_dx;
     dY_dx.resize(X.size());
@@ -159,12 +159,12 @@ namespace GG
     this->setup(X, Y, Z);
   }
 
-  real 
-  BilinearInterpolator::eval(double xi, double yi) const 
+  real
+  BilinearInterpolator::eval(double xi, double yi) const
   {
     // Find i such that x[i] <= xi < x[i+1]
-    const size_type i = findInterval(this->m_x, xi);
-    const size_type j = findInterval(this->m_y, yi);
+    const size_type i = find_interval(this->m_x, xi);
+    const size_type j = find_interval(this->m_y, yi);
 
     const size_type base_idx = i * this->m_ny;
     const size_type next_base_idx = (i + 1) * this->m_ny;
@@ -189,14 +189,14 @@ namespace GG
 
 
   // Find index i such that vec[i] <= value < vec[i+1]
-  size_type 
-  findInterval(const std::vector<real>& vec, real value) 
+  size_type
+  find_interval(const std::vector<real>& vec, real value)
   {
     size_type seg = 0;
-    
+
     if (value >= vec.front() && value <= vec.back())
     {
-      for (integer i = 0; i < (integer) vec.size() - 1; ++i) 
+      for (integer i = 0; i < (integer) vec.size() - 1; ++i)
       {
         if (value >= vec[i] && value <= vec[i+1])
         {
@@ -205,19 +205,19 @@ namespace GG
         }
       }
     }
-    else 
+    else
     {
       seg = value < vec.front() ? 0 : (integer) vec.size() - 2;
     }
-    
+
     return seg;
 
   }
 
 
   // Find index i such that vec[i] <= value < vec[i+1]
-  size_type 
-  findIntervalWithGuess(const std::vector<real>& vec, real value, size_type guess) 
+  size_type
+  find_interval_with_guess(const std::vector<real>& vec, real value, size_type guess)
   {
     size_type seg = 0;
     // Check if the guess is within bounds
@@ -227,27 +227,27 @@ namespace GG
     }
 
     // Check if the value is within the range of vec
-    if (value >= vec.front() && value <= vec.back()) 
+    if (value >= vec.front() && value <= vec.back())
     {
-      for (size_type i = guess; i < vec.size() - 1; ++i) 
+      for (size_type i = guess; i < vec.size() - 1; ++i)
       {
-        if (value >= vec[i] && value <= vec[i + 1]) 
+        if (value >= vec[i] && value <= vec[i + 1])
         {
           seg = i;
           break;
         }
       }
       // If not found, check the previous elements
-      for(size_type i = guess; i > 0; --i) 
+      for(size_type i = guess; i > 0; --i)
       {
-        if (value >= vec[i - 1] && value <= vec[i]) 
+        if (value >= vec[i - 1] && value <= vec[i])
         {
           seg = i - 1;
           break;
         }
       }
     }
-    else 
+    else
     {
       seg = value < vec.front() ? 0 : (integer) vec.size() - 2;
     }
@@ -256,19 +256,19 @@ namespace GG
 
     // Use the guess to find the interval
   }
-  
+
 
   size_type
-  findIntervalBinarySearch(const std::vector<real>& vec, real value)
+  find_interval_binary_search(const std::vector<real>& vec, real value)
   {
     size_type low = 0;
     size_type high = vec.size() - 1;
 
-    while (high - low > 1) 
+    while (high - low > 1)
     {
       size_type mid = low + (high - low) / 2;
 
-      if (vec[mid] < value) 
+      if (vec[mid] < value)
       {
         low = mid;
       } else if (vec[mid] > value)
@@ -279,16 +279,16 @@ namespace GG
         return mid; // Found exact match
       }
     }
-    return high; // Return the index of the largest element less than or equal to value
+    return low; // Return the index of the largest element less than or equal to value
   }
 
-  
-  size_type 
-  findIntervalbyEquispaced(const std::vector<real>& vec, real value)
+
+  size_type
+  find_interval_by_equispaced(const std::vector<real>& vec, real value)
   {
-    if (value < vec.front() || value > vec.back()) 
+    if (value < vec.front() || value > vec.back())
     {
-      throw std::out_of_range("findIntervalbyEquispaced >> Interpolation point is outside the grid.");
+      throw std::out_of_range("find_interval_by_equispaced >> Interpolation point is outside the grid.");
     }
 
     auto i = (integer) ((value - vec.front()) / (vec.back() - vec.front()) * (static_cast<real>(vec.size()) - 1));
@@ -332,7 +332,7 @@ namespace GG
   LinearInterpolator::eval(real xi) const
   {
     // Find i such that x[i] <= xi < x[i+1]
-    size_type i = findInterval(this->m_x, xi);
+    size_type i = find_interval(this->m_x, xi);
 
     // Linear interpolation formula
     real x0 = this->m_x[i];
@@ -406,7 +406,7 @@ namespace GG
     auto index = static_cast<integer>(std::distance(this->m_headers.begin(), it));
 
     // Create a LinearInterpolator for the specified header
-    size_type i = findInterval(this->m_x, xi);
+    size_type i = find_interval(this->m_x, xi);
 
     // Linear interpolation formula
     real x0 = this->m_x[i];
@@ -422,16 +422,16 @@ namespace GG
 
 
 
-  void linspace(std::vector<GG::real> & vec, const GG::real x1, const GG::real x2, GG::integer N) 
+  void linspace(std::vector<real> & vec, const real x1, const real x2, integer N)
   {
     vec.resize(N);
-    if (N == 1) 
+    if (N == 1)
     {
       vec[0] = x1;
     }
-    else 
+    else
     {
-      const GG::real h = (x2 - x1) / (N - 1);
+      const real h = (x2 - x1) / (N - 1);
       std::generate(vec.begin(), vec.end(),
                     [x = x1 - h, h]() mutable {x += h; return x;});
     }

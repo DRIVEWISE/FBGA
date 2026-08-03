@@ -13,10 +13,9 @@
 (***********************************************************************************)
 */
 
-#ifndef BRENTEKKER_HXX
-#define BRENTEKKER_HXX
+#pragma once
 
-#include "types.hxx"
+#include <utils/types.hh>
 #include <vector>
 #include <string>
 #include <functional>
@@ -24,10 +23,14 @@
 #define STD_MAX_ITER 200
 #define STD_VERBOSE "zero"
 
-namespace GG
+namespace fb::solvers
 {
 
-  class brentdekker
+  using fb::utils::real;
+  using fb::utils::integer;
+  using fb::utils::QUIET_NAN;
+
+  class BrentDekker
   {
   private:
     real tol = STD_TOL;
@@ -39,10 +42,10 @@ namespace GG
     std::vector<real> x_iter;
 
   public: 
-    brentdekker() = default;
-    explicit brentdekker(real tol);
-    brentdekker(real tol, integer max_iter);
-    brentdekker(real tol, integer max_iter, const std::string &verbose);
+    BrentDekker() = default;
+    explicit BrentDekker(real tol);
+    BrentDekker(real tol, integer max_iter);
+    BrentDekker(real tol, integer max_iter, const std::string &verbose);
 
     void set_tolerance(const real new_tol){ tol = new_tol; }
     void set_max_iter(const integer new_max_iter) { max_iter = new_max_iter; }
@@ -53,4 +56,3 @@ namespace GG
 
 }
 
-#endif

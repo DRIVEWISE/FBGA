@@ -1,17 +1,15 @@
-#ifndef GG_UTILS_HXX
-#define GG_UTILS_HXX
+#pragma once
 
-#include "types.hxx"
+#include <utils/types.hh>
 
 #include <vector>
 #include <string>
 
-
-namespace GG
+namespace fb::utils
 {
 
   // Enum to understand if a segment is of type forward (1) or backward (2) or transitions (3) or unknown (0)
-  enum SegmentType
+  enum class SegmentType
   {
     FORWARD = 1,
     BACKWARD = 2,
@@ -42,9 +40,6 @@ private:
   std::vector<real> m_x, m_y;
   integer m_nx{0};
 
-  // Find index i such that vec[i] <= value < vec[i+1]
-  
-
 };
 
 class LinearInterpolatorSet {
@@ -64,13 +59,13 @@ private:
 
 };
 
-size_type findInterval(const std::vector<real>& vec, real value) ;
+size_type find_interval(const std::vector<real>& vec, real value) ;
 
-size_type findIntervalWithGuess(const std::vector<real>& vec, real value, size_type guess) ;
+size_type find_interval_with_guess(const std::vector<real>& vec, real value, size_type guess) ;
 
-size_type findIntervalBinarySearch(const std::vector<real>& vec, real value) ;
+size_type find_interval_binary_search(const std::vector<real>& vec, real value) ;
 
-size_type findIntervalbyEquispaced(const std::vector<real>& vec, real value) ;
+size_type find_interval_by_equispaced(const std::vector<real>& vec, real value) ;
 
 class BilinearInterpolator {
 public:
@@ -88,17 +83,12 @@ public:
 private:
   std::vector<real> m_x, m_y, m_z;
   integer m_nx{0}, m_ny{0};
-  // size_type m_memory_idx_x{0}, m_memory_idx_y{0};
 
 };
 
-void computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx);
-std::vector<real> computeFiniteDifference(const std::vector<double>& X, const std::vector<double>& Y);
+void compute_finite_difference(const std::vector<double>& X, const std::vector<double>& Y, std::vector<real> & dY_dx);
+std::vector<real> compute_finite_difference(const std::vector<double>& X, const std::vector<double>& Y);
 
-void linspace(std::vector<GG::real> & vec, const GG::real x1, const GG::real x2, GG::integer N);
+void linspace(std::vector<real> & vec, real x1, real x2, integer N);
 
-}
-
-
-
-#endif
+} // namespace fb::utils

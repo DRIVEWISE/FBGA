@@ -1,8 +1,15 @@
-# GG::FWBW Usage Guide
+# fb::fbga::Fb2d Usage Guide
 
 ## Overview
 
-The `GG::FWBW` (Forward-Backward) class is a sophisticated optimization tool for computing optimal velocity profiles along a race track or path, subject to physical constraints like tire grip, aerodynamic forces, and vehicle dynamics. It implements a forward-backward algorithm that finds the maximum velocity profile while respecting acceleration limits.
+The `fb::fbga::Fb2d` (Forward-Backward) class is a sophisticated optimization tool for computing optimal velocity profiles along a race track or path, subject to physical constraints like tire grip, aerodynamic forces, and vehicle dynamics. It implements a forward-backward algorithm that finds the maximum velocity profile while respecting acceleration limits.
+
+`Fb2d` lives in the `fbga` module (`fb::fbga` namespace); the `real`/`integer` vocabulary types and helper classes it builds on live in the `utils` module (`fb::utils` namespace). All the snippets below assume:
+
+```cpp
+using namespace fb::utils;
+using namespace fb::fbga;
+```
 
 ## Table of Contents
 
@@ -28,9 +35,9 @@ The algorithm requires:
 ### 1. Track Data or Race line
 
 ```cpp
-std::vector<GG::real> SS_vec;  // Arc length coordinates [m]
-std::vector<GG::real> KK_vec;  // Curvature values [1/m]
-GG::real v_initial;            // Initial velocity [m/s]
+std::vector<real> SS_vec;  // Arc length coordinates [m]
+std::vector<real> KK_vec;  // Curvature values [1/m]
+real v_initial;            // Initial velocity [m/s]
 ```
 
 ### 2. Constraint Functions
@@ -40,7 +47,7 @@ You need to define three key functions:
 #### Upper Acceleration Bound
 
 ```cpp
-auto GG_shape1 = [](GG::real ay, GG::real v) -> GG::real {
+auto GG_shape1 = [](real ay, real v) -> real {
     // Return maximum longitudinal acceleration [m/s²]
     // given lateral acceleration ay [m/s²] and velocity v [m/s]
     return max_ax_function(ay, v);
@@ -50,7 +57,7 @@ auto GG_shape1 = [](GG::real ay, GG::real v) -> GG::real {
 #### Lower Acceleration Bound
 
 ```cpp
-auto GG_shape2 = [](GG::real ay, GG::real v) -> GG::real {
+auto GG_shape2 = [](real ay, real v) -> real {
     // Return minimum (most negative) longitudinal acceleration [m/s²]
     // given lateral acceleration ay [m/s²] and velocity v [m/s]
     return min_ax_function(ay, v);
@@ -60,84 +67,87 @@ auto GG_shape2 = [](GG::real ay, GG::real v) -> GG::real {
 #### Lateral Acceleration Range
 
 ```cpp
-auto gg_range_min = [](GG::real v) -> GG::real {
+auto gg_range_min = [](real v) -> real {
     // Return minimum lateral acceleration [m/s²] at velocity v [m/s]
     return min_ay_function(v);
 };
 
-auto gg_range_max = [](GG::real v) -> GG::real {
+auto gg_range_max = [](real v) -> real {
     // Return maximum lateral acceleration [m/s²] at velocity v [m/s]
     return max_ay_function(v);
 };
 
-GG::gg_range_max_min gg_range = {gg_range_min, gg_range_max};
+GgRangeMaxMin gg_range = {gg_range_min, gg_range_max};
 ```
 
 ## Constructor Parameters
 
 ```cpp
-GG::FWBW fbga(
+Fb2d fb2d(
     const std::function<real(real, real)> &gg_Upper,  // Upper acceleration bound
     const std::function<real(real, real)> &gg_Lower,  // Lower acceleration bound
-    const gg_range_max_min &gg_range                   // Lateral acceleration range
+    const GgRangeMaxMin &gg_range                      // Lateral acceleration range
 );
 ```
 
 ## Basic Usage Example
 
 ```cpp
-#include "FBGA/FWBW.hxx"
-#include "FBGA/types.hxx"
+#include <fbga/fb2d.hh>
+#include <utils/types.hh>
+
+using namespace fb::utils;
+using namespace fb::fbga;
 
 int main() {
     // 1. Define track data
-    std::vector<GG::real> SS_vec = {0.0, 5.0, 10.0, 15.0, 20.0};  // Arc length [m]
-    std::vector<GG::real> KK_vec = {0.0, 0.001, 0.05, 0.04, 0.0};    // Curvature [1/m]
-    GG::real v_initial = 20.0;  // Initial velocity [m/s]
+    std::vector<real> SS_vec = {0.0, 5.0, 10.0, 15.0, 20.0};  // Arc length [m]
+    std::vector<real> KK_vec = {0.0, 0.001, 0.05, 0.04, 0.0};    // Curvature [1/m]
+    real v_initial = 20.0;  // Initial velocity [m/s]
     
     // 2. Define vehicle parameters
-    const GG::real mu_x = 1.3;   // Longitudinal friction coefficient
-    const GG::real mu_y = 1.4;   // Lateral friction coefficient
-    const GG::real g = 9.81;     // Gravity [m/s²]
+    const real mu_x = 1.3;   // Longitudinal friction coefficient
+    const real mu_y = 1.4;   // Lateral friction coefficient
+    const real g = 9.81;     // Gravity [m/s²]
     
     // 3. Define constraint functions
-    auto GG_shape1 = [mu_x, mu_y, g](GG::real ay, GG::real v) -> GG::real {
+    auto GG_shape1 = [mu_x, mu_y, g](real ay, real v) -> real {
         // Simple friction circle upper bound
-        GG::real ay_norm = ay / g;
+        real ay_norm = ay / g;
         return g * std::sqrt(-ay_norm*ay_norm + mu_y*mu_y)*mu_x/mu_y;
     };
     
-    auto GG_shape2 = [mu_x, mu_y, g](GG::real ay, GG::real v) -> GG::real {
+    auto GG_shape2 = [mu_x, mu_y, g](real ay, real v) -> real {
         // Simple friction circle lower bound
-        GG::real ay_norm = ay / g;
+        real ay_norm = ay / g;
         return -g * std::sqrt(-ay_norm*ay_norm + mu_y*mu_y)*mu_x/mu_y;
     };
     
-    auto gg_range_min = [mu_y, g](GG::real v) -> GG::real {
+    auto gg_range_min = [mu_y, g](real v) -> real {
         return -mu_y * g;  
     };
     
-    auto gg_range_max = [mu_y, g](GG::real v) -> GG::real {
+    auto gg_range_max = [mu_y, g](real v) -> real {
         return +mu_y * g;
     };
     
-    GG::gg_range_max_min gg_range = {gg_range_min, gg_range_max};
+    GgRangeMaxMin gg_range = {gg_range_min, gg_range_max};
     
-    // 4. Create FWBW object
-    GG::FWBW fbga(GG_shape1, GG_shape2, gg_range);
+    // 4. Create Fb2d object
+    Fb2d fb2d(GG_shape1, GG_shape2, gg_range);
     
     // 5. Compute optimal velocity profile
-    GG::real total_time = fbga.compute(SS_vec, KK_vec, v_initial);
+    real total_time = fb2d.compute(SS_vec, KK_vec, v_initial);
     
     // 6. Extract results
-    std::vector<GG::real> VX_vec(SS_vec.size());
-    std::vector<GG::real> AX_vec(SS_vec.size());
-    std::vector<GG::real> AY_vec(SS_vec.size());
+    std::vector<real> VX_vec(SS_vec.size());
+    std::vector<real> AX_vec(SS_vec.size());
+    std::vector<real> AY_vec(SS_vec.size());
     
     for (size_t i = 0; i < SS_vec.size(); ++i) {
-        VX_vec[i] = fbga.evalV(SS_vec[i]);   // Velocity [m/s]
-        AX_vec[i] = fbga.evalAx(SS_vec[i]);  // Longitudinal acceleration [m/s²]
-        AY_vec[i] = fbga.evalAy(SS_vec[i]);  // Lateral acceleration [m/s²]
+        VX_vec[i] = fb2d.evalV(SS_vec[i]);   // Velocity [m/s]
+        AX_vec[i] = fb2d.evalAx(SS_vec[i]);  // Longitudinal acceleration [m/s²]
+        AY_vec[i] = fb2d.evalAy(SS_vec[i]);  // Lateral acceleration [m/s²]
     }
     
     std::cout << "Total lap time: " << total_time << " seconds" << std::endl;
@@ -152,12 +162,12 @@ int main() {
 
 ```cpp
 // Define custom solver parameters (optional)
-GG::solver_params custom_params;
+SolverParams custom_params;
 custom_params.tolerance = 1.0e-12;      // Higher precision
 custom_params.max_iter = 500;           // More iterations
 custom_params.verbosity = "detailed";   // More verbose output
 
-// Note: Currently, you need to modify the FWBW class to accept custom solver parameters
+// Note: Currently, you need to modify the Fb2d class to accept custom solver parameters
 // or set them after construction if the API allows it
 ```
 
@@ -167,25 +177,25 @@ For a motorcycle (as in the example), you might have more complex constraints:
 
 ```cpp
 struct VehicleParams {
-    GG::real b = 0.73;       // Wheelbase [m]
-    GG::real h = 0.69;       // Center of mass height [m]
-    GG::real mu_X = 1.30;    // Longitudinal friction
-    GG::real mu_Y = 1.40;    // Lateral friction
-    GG::real m = 250.0;      // Mass [kg]
-    GG::real P = 145000.0;   // Maximum power [W]
+    real b = 0.73;       // Wheelbase [m]
+    real h = 0.69;       // Center of mass height [m]
+    real mu_X = 1.30;    // Longitudinal friction
+    real mu_Y = 1.40;    // Lateral friction
+    real m = 250.0;      // Mass [kg]
+    real P = 145000.0;   // Maximum power [W]
     // ... aerodynamic coefficients, etc.
 };
 
 VehicleParams vehicle;
 
-auto engine_limit = [&vehicle](GG::real v) -> GG::real {
+auto engine_limit = [&vehicle](real v) -> real {
     return vehicle.P / (vehicle.m * v);  // Power-limited acceleration
 };
 
-auto GG_shape1 = [&vehicle, &engine_limit](GG::real ay, GG::real v) -> GG::real {
-    GG::real ax_engine = engine_limit(v);
-    GG::real ax_friction = friction_limit(ay, v, vehicle);
-    GG::real ax_wheeling = wheeling_limit(ay, v, vehicle);
+auto GG_shape1 = [&vehicle, &engine_limit](real ay, real v) -> real {
+    real ax_engine = engine_limit(v);
+    real ax_friction = friction_limit(ay, v, vehicle);
+    real ax_wheeling = wheeling_limit(ay, v, vehicle);
     
     return std::min({ax_engine, ax_friction, ax_wheeling});
 };
@@ -197,12 +207,13 @@ auto GG_shape1 = [&vehicle, &engine_limit](GG::real ay, GG::real v) -> GG::real 
 
 #### `compute()`
 ```cpp
-real compute(std::vector<real> const &SS, std::vector<real> const &KK, real v0);
+real compute(std::vector<real> const &SS, std::vector<real> const &KK, real v0, real vfmax = 130.0);
 ```
 - **Parameters:**
   - `SS`: Arc length vector [m]
   - `KK`: Curvature vector [1/m]
   - `v0`: Initial velocity [m/s]
+  - `vfmax`: Maximum allowed final velocity [m/s] (optional, defaults to the class's `VMAX_SPEED` constant, currently 130.0)
 - **Returns:** Total time [s]
 - **Description:** Main computation method that runs the forward-backward algorithm
 

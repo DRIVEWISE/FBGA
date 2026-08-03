@@ -2,49 +2,51 @@
 #include <fstream>
 #include <iostream>
 
-#include "FBGA/FWBW.hxx"
-#include "FBGA/gg_utils.hxx"
-#include "FBGA/types.hxx"
+#include <fbga/fb2d.hh>
+#include <utils/gg_utils.hh>
+#include <utils/types.hh>
 
-#include "rapidcsv.h"
+#include <rapidcsv.h>
 
-#include "cxxopts.hpp"
+#include <cxxopts.hpp>
 
+using namespace fb::utils;
+using namespace fb::fbga;
 
-//  █████╗ ███████╗██████╗  ██████╗    ███╗   ███╗ ██████╗ ██████╗ ███████╗██╗     
-// ██╔══██╗██╔════╝██╔══██╗██╔═══██╗   ████╗ ████║██╔═══██╗██╔══██╗██╔════╝██║     
-// ███████║█████╗  ██████╔╝██║   ██║   ██╔████╔██║██║   ██║██║  ██║█████╗  ██║     
-// ██╔══██║██╔══╝  ██╔══██╗██║   ██║   ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝  ██║     
+//  █████╗ ███████╗██████╗  ██████╗    ███╗   ███╗ ██████╗ ██████╗ ███████╗██╗
+// ██╔══██╗██╔════╝██╔══██╗██╔═══██╗   ████╗ ████║██╔═══██╗██╔══██╗██╔════╝██║
+// ███████║█████╗  ██████╔╝██║   ██║   ██╔████╔██║██║   ██║██║  ██║█████╗  ██║
+// ██╔══██║██╔══╝  ██╔══██╗██║   ██║   ██║╚██╔╝██║██║   ██║██║  ██║██╔══╝  ██║
 // ██║  ██║███████╗██║  ██║╚██████╔╝   ██║ ╚═╝ ██║╚██████╔╝██████╔╝███████╗███████╗
 // ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝    ╚═╝     ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝╚══════╝
-                                                                             
+
 // data structure to hold the aerodynamic data
 struct AeroData{
-  GG::real b = 0.73; // wheelbase
-  GG::real L_W = 1.5; // length of the wheel
-  GG::real h = 0.69; // height of the center of mass
-  GG::real mu_X = 1.30; // longitudinal friction coefficient
-  GG::real mu_Y = 1.40; // lateral friction coefficient
-  GG::real c_a_0 = 0.00; // aerodynamic coefficient
-  GG::real c_a_1 = 0.00; // aerodynamic coefficient
-  GG::real c_a_2 = 0.5*1.2*0.25/(250.0*9.81); // aerodynamic coefficient
-  GG::real h_a = 0.51; // height of the aerodynamic center
-  GG::real g = 9.81; // gravitational acceleration
-  GG::real m = 250.0; // mass of the motorcycle
-  GG::real P = 145.0 * 1000.0; // maximum power of the engine in Watts
+  real b = 0.73; // wheelbase
+  real L_W = 1.5; // length of the wheel
+  real h = 0.69; // height of the center of mass
+  real mu_X = 1.30; // longitudinal friction coefficient
+  real mu_Y = 1.40; // lateral friction coefficient
+  real c_a_0 = 0.00; // aerodynamic coefficient
+  real c_a_1 = 0.00; // aerodynamic coefficient
+  real c_a_2 = 0.5*1.2*0.25/(250.0*9.81); // aerodynamic coefficient
+  real h_a = 0.51; // height of the aerodynamic center
+  real g = 9.81; // gravitational acceleration
+  real m = 250.0; // mass of the motorcycle
+  real P = 145.0 * 1000.0; // maximum power of the engine in Watts
 };
 
 // maximum acceelration due to the engine
 
-GG::real ax_max_engine(GG::real v, const AeroData& aero_data) {
+real ax_max_engine(real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h; 
+  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
-  const auto c_a_0 = aero_data.c_a_0; 
-  const auto c_a_1 = aero_data.c_a_1; 
-  const auto c_a_2 = aero_data.c_a_2; 
+  const auto c_a_0 = aero_data.c_a_0;
+  const auto c_a_1 = aero_data.c_a_1;
+  const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
@@ -55,15 +57,15 @@ GG::real ax_max_engine(GG::real v, const AeroData& aero_data) {
 
 // minimum acceleration from adherence ellipse
 
-GG::real ax_min_adherence(GG::real ayg, GG::real v, const AeroData& aero_data) {
+real ax_min_adherence(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h; 
+  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
-  const auto c_a_0 = aero_data.c_a_0; 
-  const auto c_a_1 = aero_data.c_a_1; 
-  const auto c_a_2 = aero_data.c_a_2; 
+  const auto c_a_0 = aero_data.c_a_0;
+  const auto c_a_1 = aero_data.c_a_1;
+  const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
@@ -76,15 +78,15 @@ GG::real ax_min_adherence(GG::real ayg, GG::real v, const AeroData& aero_data) {
 
 // minimum acceleration from stoppie constraint
 
-GG::real ax_min_stoppie(GG::real ayg, GG::real v, const AeroData& aero_data) {
+real ax_min_stoppie(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h; 
+  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
-  const auto c_a_0 = aero_data.c_a_0; 
-  const auto c_a_1 = aero_data.c_a_1; 
-  const auto c_a_2 = aero_data.c_a_2; 
+  const auto c_a_0 = aero_data.c_a_0;
+  const auto c_a_1 = aero_data.c_a_1;
+  const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
@@ -97,15 +99,15 @@ GG::real ax_min_stoppie(GG::real ayg, GG::real v, const AeroData& aero_data) {
 
 // maximum acceleration from wheeling constraint
 
-GG::real ax_max_wheeling(GG::real ayg, GG::real v, const AeroData& aero_data) {
+real ax_max_wheeling(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h; 
+  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
-  const auto c_a_0 = aero_data.c_a_0; 
-  const auto c_a_1 = aero_data.c_a_1; 
-  const auto c_a_2 = aero_data.c_a_2; 
+  const auto c_a_0 = aero_data.c_a_0;
+  const auto c_a_1 = aero_data.c_a_1;
+  const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
@@ -118,15 +120,15 @@ GG::real ax_max_wheeling(GG::real ayg, GG::real v, const AeroData& aero_data) {
 
 // maximum acceleration from adherence ellipse
 
-GG::real ax_max_adherence(GG::real ayg, GG::real v, const AeroData& aero_data) {
+real ax_max_adherence(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h; 
+  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
-  const auto c_a_0 = aero_data.c_a_0; 
-  const auto c_a_1 = aero_data.c_a_1; 
-  const auto c_a_2 = aero_data.c_a_2; 
+  const auto c_a_0 = aero_data.c_a_0;
+  const auto c_a_1 = aero_data.c_a_1;
+  const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
@@ -144,7 +146,7 @@ GG::real ax_max_adherence(GG::real ayg, GG::real v, const AeroData& aero_data) {
 // ██║╚██╔╝██║██╔══██║██║██║╚██╗██║
 // ██║ ╚═╝ ██║██║  ██║██║██║ ╚████║
 // ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝
-                                
+
 
 int main(int argc, char *argv[])
 {
@@ -153,8 +155,8 @@ int main(int argc, char *argv[])
   options.add_options()
     ("h,help", "Print help")
     ("c,circuit", "Circuit name", cxxopts::value<std::string>()->default_value("Catalunya"));
-  
-  auto result = options.parse(argc, argv); 
+
+  auto result = options.parse(argc, argv);
   // Print help
   if (result.count("help"))
   {
@@ -175,31 +177,31 @@ int main(int argc, char *argv[])
 
 
   rapidcsv::Document doc_1D(
-    comp_file_path, 
+    comp_file_path,
     rapidcsv::LabelParams(0, -1), // Ensure the first non-comment line is treated as headers
     rapidcsv::SeparatorParams('\t',true),
     rapidcsv::ConverterParams(),
-    rapidcsv::LineReaderParams(true, '#')); // Skip only comment lines 
+    rapidcsv::LineReaderParams(true, '#')); // Skip only comment lines
 
   // extract
-  std::vector<GG::real> SS_vec_1D = doc_1D.GetColumn<GG::real>("zeta");
-  std::vector<GG::real> KK_vec_1D = doc_1D.GetColumn<GG::real>("curvature");
-  std::vector<GG::real> VX_vec_1D = doc_1D.GetColumn<GG::real>("v__x");
-  std::vector<GG::real> AX_vec_1D = doc_1D.GetColumn<GG::real>("a__x");
+  std::vector<real> SS_vec_1D = doc_1D.GetColumn<real>("zeta");
+  std::vector<real> KK_vec_1D = doc_1D.GetColumn<real>("curvature");
+  std::vector<real> VX_vec_1D = doc_1D.GetColumn<real>("v__x");
+  std::vector<real> AX_vec_1D = doc_1D.GetColumn<real>("a__x");
   // ay is curvature times v^2
-  std::vector<GG::real> AY_vec_1D;
+  std::vector<real> AY_vec_1D;
   AY_vec_1D.resize(VX_vec_1D.size());
   for (size_t i = 0; i < VX_vec_1D.size(); ++i) {
     AY_vec_1D[i] = KK_vec_1D[i] * VX_vec_1D[i] * VX_vec_1D[i];
   }
 
-  GG::LinearInterpolatorSet traj_spline_1D(
-    SS_vec_1D, 
+  LinearInterpolatorSet traj_spline_1D(
+    SS_vec_1D,
     { KK_vec_1D, VX_vec_1D, AX_vec_1D, AY_vec_1D},
     {"kappa", "v_x", "a_x", "a_y"});
-  GG::real mesh_size_1D = 0.0;
+  real mesh_size_1D = 0.0;
   for (size_t i = 0; i < SS_vec_1D.size() - 1; ++i) {
-    mesh_size_1D += (SS_vec_1D[i + 1] - SS_vec_1D[i]) / static_cast<GG::real>(SS_vec_1D.size() - 1);
+    mesh_size_1D += (SS_vec_1D[i + 1] - SS_vec_1D[i]) / static_cast<real>(SS_vec_1D.size() - 1);
   }
 
   // ███████╗███╗   ██╗██╗   ██╗███████╗██╗      ██████╗ ██████╗ ███████╗
@@ -214,41 +216,41 @@ int main(int argc, char *argv[])
 
   // create the function handles for the FBGA
 
-  auto GG_shape1 = [&aero_data](GG::real ay, GG::real v) -> GG::real {
+  auto GG_shape1 = [&aero_data](real ay, real v) -> real {
     return std::min(
       std::min(
         ax_max_wheeling(ay, v, aero_data),
         ax_max_adherence(ay, v, aero_data)),
       ax_max_engine(v, aero_data));
   };
-  auto GG_shape2 = [&aero_data](GG::real ay, GG::real v) -> GG::real {
+  auto GG_shape2 = [&aero_data](real ay, real v) -> real {
     return std::max(
       ax_min_stoppie(ay, v, aero_data),
       ax_min_adherence(ay, v, aero_data));
   };
-  auto gg_range_min = [&aero_data](GG::real v) -> GG::real {
+  auto gg_range_min = [&aero_data](real v) -> real {
     return -aero_data.mu_Y * aero_data.g * 0.999;
   };
-  auto gg_range_max = [&aero_data](GG::real v) -> GG::real {
+  auto gg_range_max = [&aero_data](real v) -> real {
     return +aero_data.mu_Y * aero_data.g * 0.999;
   };
 
-  GG::gg_range_max_min gg_range = {gg_range_min, gg_range_max};
+  GgRangeMaxMin gg_range = {gg_range_min, gg_range_max};
 
-  GG::real Vminenv = 5.0;
-  GG::real Vmaxenv = 100.0;
+  real Vminenv = 5.0;
+  real Vmaxenv = 100.0;
 
 
   //  ██████╗ ██████╗ ██╗   ██╗████████╗
   // ██╔════╝██╔═══██╗██║   ██║╚══██╔══╝
-  // ██║     ██║   ██║██║   ██║   ██║   
-  // ██║     ██║   ██║██║   ██║   ██║   
-  // ╚██████╗╚██████╔╝╚██████╔╝   ██║   
-  //  ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝   
-                                      
+  // ██║     ██║   ██║██║   ██║   ██║
+  // ██║     ██║   ██║██║   ██║   ██║
+  // ╚██████╗╚██████╔╝╚██████╔╝   ██║
+  //  ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝
+
 
   std::cout << "FBGA - Forward Backward Generic Acceleration constraints\n";
-  std::cout << " > Running test for circuit: " << result["circuit"].as<std::string>() << "\n";
+  std::cout << " > Running example for circuit: " << result["circuit"].as<std::string>() << "\n";
   std::cout << " > Motorcycle ggv envelope\n";
   // print aero data
   std::cout << " > Aero data:\n";
@@ -268,42 +270,42 @@ int main(int argc, char *argv[])
   std::cout << " > Road info:\n";
   std::cout << " >   mesh size: " << mesh_size_1D << "\n";
   std::cout << " >   Length: " << SS_vec_1D.back() - SS_vec_1D.front() << "\n";
-                                    
-  // ███████╗██████╗  ██████╗  █████╗ 
+
+  // ███████╗██████╗  ██████╗  █████╗
   // ██╔════╝██╔══██╗██╔════╝ ██╔══██╗
   // █████╗  ██████╔╝██║  ███╗███████║
   // ██╔══╝  ██╔══██╗██║   ██║██╔══██║
   // ██║     ██████╔╝╚██████╔╝██║  ██║
   // ╚═╝     ╚═════╝  ╚═════╝ ╚═╝  ╚═╝
-                                                         
+
   // create object
 
-  GG::FWBW fwbw(GG_shape1, GG_shape2, gg_range);
+  Fb2d fwbw(GG_shape1, GG_shape2, gg_range);
 
   // create the vector for the solution
 
-  std::vector<GG::real> SS_gg_vec = SS_vec_1D;
-  std::vector<GG::real> KK_gg_vec = KK_vec_1D;
-  GG::integer numpts_gg = SS_gg_vec.size();
+  std::vector<real> SS_gg_vec = SS_vec_1D;
+  std::vector<real> KK_gg_vec = KK_vec_1D;
+  integer numpts_gg = SS_gg_vec.size();
 
-  GG::real v_initial = VX_vec_1D.front();
+  real v_initial = VX_vec_1D.front();
 
   std::cout << " + FWBW computation started\n";
 
   auto start = std::chrono::steady_clock::now();
-  GG::real T = fwbw.compute(SS_gg_vec, KK_gg_vec, v_initial);
+  real T = fwbw.compute(SS_gg_vec, KK_gg_vec, v_initial);
   auto end = std::chrono::steady_clock::now();
 
   // ██████╗  ██████╗ ███████╗████████╗██████╗ ██████╗  ██████╗  ██████╗
   // ██╔══██╗██╔═══██╗██╔════╝╚══██╔══╝██╔══██╗██╔══██╗██╔═══██╗██╔════╝
-  // ██████╔╝██║   ██║███████╗   ██║   ██████╔╝██████╔╝██║   ██║██║     
-  // ██╔═══╝ ██║   ██║╚════██║   ██║   ██╔═══╝ ██╔══██╗██║   ██║██║     
+  // ██████╔╝██║   ██║███████╗   ██║   ██████╔╝██████╔╝██║   ██║██║
+  // ██╔═══╝ ██║   ██║╚════██║   ██║   ██╔═══╝ ██╔══██╗██║   ██║██║
   // ██║     ╚██████╔╝███████║   ██║   ██║     ██║  ██║╚██████╔╝╚██████╗
   // ╚═╝      ╚═════╝ ╚══════╝   ╚═╝   ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚═════╝
 
 
   std::cout << " + FWBW computation finished\n";
-                                                                      
+
   auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
   auto elapsed_microsec = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
@@ -319,17 +321,16 @@ int main(int argc, char *argv[])
 
   //  ██████╗ ██╗   ██╗████████╗██████╗ ██╗   ██╗████████╗    ███████╗██╗██╗     ███████╗
   // ██╔═══██╗██║   ██║╚══██╔══╝██╔══██╗██║   ██║╚══██╔══╝    ██╔════╝██║██║     ██╔════╝
-  // ██║   ██║██║   ██║   ██║   ██████╔╝██║   ██║   ██║       █████╗  ██║██║     █████╗  
-  // ██║   ██║██║   ██║   ██║   ██╔═══╝ ██║   ██║   ██║       ██╔══╝  ██║██║     ██╔══╝  
+  // ██║   ██║██║   ██║   ██║   ██████╔╝██║   ██║   ██║       █████╗  ██║██║     █████╗
+  // ██║   ██║██║   ██║   ██║   ██╔═══╝ ██║   ██║   ██║       ██╔══╝  ██║██║     ██╔══╝
   // ╚██████╔╝╚██████╔╝   ██║   ██║     ╚██████╔╝   ██║       ██║     ██║███████╗███████╗
   //  ╚═════╝  ╚═════╝    ╚═╝   ╚═╝      ╚═════╝    ╚═╝       ╚═╝     ╚═╝╚══════╝╚══════╝
-                                                                                      
 
   // get the solution of the forward backward in terms of VX, AX, AY
-  std::vector<GG::real> VX_gg_vec(numpts_gg);
-  std::vector<GG::real> AX_gg_vec(numpts_gg);
-  std::vector<GG::real> AY_gg_vec(numpts_gg);
-  for (GG::integer i = 0; i < numpts_gg; ++i) {
+  std::vector<real> VX_gg_vec(numpts_gg);
+  std::vector<real> AX_gg_vec(numpts_gg);
+  std::vector<real> AY_gg_vec(numpts_gg);
+  for (integer i = 0; i < numpts_gg; ++i) {
     VX_gg_vec[i] = fwbw.evalV(SS_gg_vec[i]);
     AX_gg_vec[i] = fwbw.evalAx(SS_gg_vec[i]);
     AY_gg_vec[i] = fwbw.evalAy(SS_gg_vec[i]);
@@ -347,18 +348,18 @@ int main(int argc, char *argv[])
     output_file << "# time\n";
     output_file << "# headers\n";
     output_file << "zeta\tcurvature\tv_x\ta_x\ta_y\n";
-    for (GG::integer i = 0; i < numpts_gg; ++i) {
-      output_file << SS_gg_vec[i] << "\t" 
-                  << KK_gg_vec[i] << "\t" 
-                  << VX_gg_vec[i] << "\t" 
-                  << AX_gg_vec[i] << "\t" 
+    for (integer i = 0; i < numpts_gg; ++i) {
+      output_file << SS_gg_vec[i] << "\t"
+                  << KK_gg_vec[i] << "\t"
+                  << VX_gg_vec[i] << "\t"
+                  << AX_gg_vec[i] << "\t"
                   << AY_gg_vec[i] << "\n";
     }
     output_file.close();
   } else {
     std::cerr << "Unable to open file for writing: ./data/FWBW/" + circuit_name + "_fwbw.txt\n";
   }
-  
+
 
   return 0;
 }

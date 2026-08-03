@@ -1,5 +1,5 @@
-#include "FBGA/FWBW.hxx"
-#include "FBGA/gg_utils.hxx"
+#include <fbga/fb2d.hh>
+#include <utils/gg_utils.hh>
 #include <chrono>
 
 #define DEBUG_FB 0
@@ -7,16 +7,20 @@
 #include <iostream>
 #include <algorithm>
 
-using namespace GG;
+namespace fb::fbga
+{
+
+using namespace fb::utils;
+using namespace fb::solvers;
 
 constexpr size_t DEFAULT_SIZE{100};
 
 // --------------------------------------------------------------------------------------------
 
-FWBW::FWBW(
+Fb2d::Fb2d(
   const std::function<real(real, real)> &gg_Upper,
   const std::function<real(real, real)> &gg_Lower,
-  const gg_range_max_min &gg_range
+  const GgRangeMaxMin &gg_range
 )
     : gg_Upper(gg_Upper), gg_Lower(gg_Lower), gg_range(gg_range)
 {
@@ -25,7 +29,7 @@ FWBW::FWBW(
   this->dump_seg_id.reserve(DEFAULT_SIZE);
 }
 
-FWBW::FWBW()
+Fb2d::Fb2d()
   : gg_Upper(nullptr), gg_Lower(nullptr), gg_range({nullptr, nullptr})
 {
   this->Segments.reserve(DEFAULT_SIZE);
@@ -34,10 +38,10 @@ FWBW::FWBW()
 }
 
 void 
-FWBW::setup_functions(
+Fb2d::setup_functions(
   const std::function<real(real, real)> &gg_Upper,
   const std::function<real(real, real)> &gg_Lower,
-  const gg_range_max_min &gg_range
+  const GgRangeMaxMin &gg_range
 )
 {
   this->gg_Upper = gg_Upper;
@@ -47,7 +51,7 @@ FWBW::setup_functions(
 
 // --------------------------------------------------------------------------------------------
 
-bool FWBW::is_in_range(const real ax, const real ay, const real v) const
+bool Fb2d::is_in_range(const real ax, const real ay, const real v) const
 {
   // Check if ax is within the upper or lower bounds
   return ax <= this->gg_Upper(ay, v) && ax >= this->gg_Lower(ay, v) && ay >= this->gg_range.min(v)
@@ -56,10 +60,10 @@ bool FWBW::is_in_range(const real ax, const real ay, const real v) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::signed_distance(const real ax, const real ay, const real v) const
+real Fb2d::signed_distance(const real ax, const real ay, const real v) const
 {
   real ayclip = clip(ay, this->gg_range.min(v), this->gg_range.max(v));
-  return GG::signed_distance(
+  return fb::utils::signed_distance(
     ax,
     this->gg_Lower(ayclip, v),
     this->gg_Upper(ayclip, v),
@@ -71,7 +75,7 @@ real FWBW::signed_distance(const real ax, const real ay, const real v) const
 
 // --------------------------------------------------------------------------------------------
 
-void FWBW::compute_Vmax()
+void Fb2d::compute_Vmax()
 {
   // extimate a small value of curvature.
   constexpr real k_small     = 1e-4;
@@ -110,7 +114,7 @@ void FWBW::compute_Vmax()
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::compute(std::vector<real> const &SS, std::vector<real> const &KK, const real v0, const real vfmax)
+real Fb2d::compute(std::vector<real> const &SS, std::vector<real> const &KK, const real v0, const real vfmax)
 {
   this->S_vec = SS;
   this->K_vec = KK;
@@ -125,7 +129,7 @@ real FWBW::compute(std::vector<real> const &SS, std::vector<real> const &KK, con
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::compute_cyclic(std::vector<real> const &SS, std::vector<real> const &KK)
+real Fb2d::compute_cyclic(std::vector<real> const &SS, std::vector<real> const &KK)
 {
   this->S_vec = SS;
   this->K_vec = KK;
@@ -157,7 +161,7 @@ real FWBW::compute_cyclic(std::vector<real> const &SS, std::vector<real> const &
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::compute_timing(std::vector<real> const &SS, std::vector<real> const &KK, const real v0, const real vfmax)
+real Fb2d::compute_timing(std::vector<real> const &SS, std::vector<real> const &KK, const real v0, const real vfmax)
 {
   using clock = std::chrono::high_resolution_clock;
 
@@ -204,7 +208,7 @@ real FWBW::compute_timing(std::vector<real> const &SS, std::vector<real> const &
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::compute_time() 
+real Fb2d::compute_time() 
 {
   real T = 0;
   for (auto &seg : this->Segments)
@@ -217,7 +221,7 @@ real FWBW::compute_time()
 
 // --------------------------------------------------------------------------------------------
 
-void FWBW::FW()
+void Fb2d::FW()
 {
   real v0 = std::min(this->v_I,this->Vmax_vec[0]);
   this->Vmax_vec[0] = v0;
@@ -231,7 +235,7 @@ void FWBW::FW()
     const real S0 = this->S_vec[i];
     const real S1 = this->S_vec[i + 1];
     const real L0 = S1 - S0;
-    this->Segments[i] = segment(S0, L0, v0, k0, k1);
+    this->Segments[i] = Segment(S0, L0, v0, k0, k1);
     const real ay0     = this->Segments[i].AY0();
     const real v1tmp = this->Vmax_vec[i + 1];
     const real ay1max = k1 * v1tmp * v1tmp;
@@ -289,14 +293,14 @@ void FWBW::FW()
     if(ok)
     {   
       this->Segments[i].set_a(ax0);
-      this->Segments[i].set_type(FORWARD);
+      this->Segments[i].set_type(SegmentType::FORWARD);
       v0 = std::max(0.0, std::min(this->Vmax_vec[i + 1], this->Segments[i].VF()));
       this->Vmax_vec[i + 1] = v0;
     }
     else 
     {
       this->Segments[i].set_a(QUIET_NAN);
-      this->Segments[i].set_type(FORWARD_NAN);
+      this->Segments[i].set_type(SegmentType::FORWARD_NAN);
       v0 = std::max(0.0, std::min(this->Vmax_vec[i + 1], v0));
       this->Vmax_vec[i + 1] = v0;
     }
@@ -305,10 +309,10 @@ void FWBW::FW()
 
 // --------------------------------------------------------------------------------------------
 
-void FWBW::BW()
+void Fb2d::BW()
 {
   real v1 = this->Vmax_vec.back();
-  if (this->Segments.back().type() == FORWARD)
+  if (this->Segments.back().type() == SegmentType::FORWARD)
   {
     v1 = this->Segments.back().VF();
   }
@@ -327,7 +331,7 @@ void FWBW::BW()
     const bool is_v0_reachable = (v0 >= v0_reach_min && v0 <= v0_reach_max);
     const bool is_amean_candidate = (amean >= axminf && amean <= axmaxf);
     const bool is_amean_valid = (this->signed_distance(amean, this->Segments[i].AYB(amean, v1), this->Segments[i].VB(amean, v1)) <= this->solver_p.tolerance);
-    const bool is_valid_forward = ((this->Segments[i].type() == FORWARD) &&  (std::abs(this->Segments[i].VF() - v1) <= this->solver_p.tolerance));
+    const bool is_valid_forward = ((this->Segments[i].type() == SegmentType::FORWARD) &&  (std::abs(this->Segments[i].VF() - v1) <= this->solver_p.tolerance));
     if(is_valid_forward)
     {
       v1 = v0;
@@ -337,7 +341,7 @@ void FWBW::BW()
     if (is_amean_candidate && is_v0_reachable && is_amean_valid )
     {
       this->Segments[i].set_a(amean);
-      this->Segments[i].set_type(TRANSITION);
+      this->Segments[i].set_type(SegmentType::TRANSITION);
       v1 = this->Segments[i].VB(amean, v1);
       // std::cout << "Valid Transition segment at index " << i << std::endl;
       //continue;
@@ -386,12 +390,12 @@ void FWBW::BW()
         //
         if (fun2solve(a_solver) > 0)
         {
-          GG::real deltaA = axmaxf - axminf;
-          GG::integer numpts = 100;
-          for (GG::integer ith = 0; ith < numpts; ith++)
+          real deltaA = axmaxf - axminf;
+          integer numpts = 100;
+          for (integer ith = 0; ith < numpts; ith++)
           {
-            GG::real ax_tmp = axminf + static_cast<GG::real>(ith) / static_cast<GG::real>(numpts) * deltaA;
-            GG::real dist_tmp = fun2solve(ax_tmp);
+            real ax_tmp = axminf + static_cast<real>(ith) / static_cast<real>(numpts) * deltaA;
+            real dist_tmp = fun2solve(ax_tmp);
             if (dist_tmp < 0.0)
             {
               a_solver = ax_tmp;
@@ -411,15 +415,15 @@ void FWBW::BW()
       {
         this->Segments[i].set_a(ax0);
         this->Segments[i].set_v0(this->Segments[i].VB(ax0, v1));
-        this->Segments[i].set_type(BACKWARD);
+        this->Segments[i].set_type(SegmentType::BACKWARD);
         v1 = this->Segments[i].VB(ax0, v1);
       }
       else
       {
-        std::cout << "FWBW::BW() >> No solution found for segment " << i << "\n";
+        std::cout << "Fb2d::BW() >> No solution found for segment " << i << "\n";
         this->dump_seg_id.push_back(i);
         // this->Segments[i].set_a(QUIET_NAN);
-        this->Segments[i].set_type(BACKWARD_NAN);
+        this->Segments[i].set_type(SegmentType::BACKWARD_NAN);
         real v_tmp = std::max(0.0, std::min({this->Vmax_vec[i],this->Vmax_vec[i+1], v1, v0}));
         this->Segments[i].set_a((v1 * v1 - v_tmp * v_tmp) / (2 * this->Segments[i].L()));
         this->Segments[i].set_v0(v_tmp);
@@ -431,7 +435,7 @@ void FWBW::BW()
 
 // --------------------------------------------------------------------------------------------
 
-void FWBW::evaluate(
+void Fb2d::evaluate(
   std::vector<real> const &SS, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V
 )
 {
@@ -442,7 +446,7 @@ void FWBW::evaluate(
     auto segment_it = std::find_if(
       this->Segments.begin(),
       this->Segments.end(),
-      [s](const segment &seg) { return s >= seg.s0() && s <= seg.s1(); }
+      [s](const Segment &seg) { return s >= seg.s0() && s <= seg.s1(); }
     );
     if (segment_it != this->Segments.end())
     {
@@ -463,7 +467,7 @@ void FWBW::evaluate(
 
 // --------------------------------------------------------------------------------------------
 
-integer FWBW::get_seg_idx(const real s) const
+integer Fb2d::get_seg_idx(const real s) const
 {
   integer seg_idx = -1;
   for (integer i = 0; i < (integer) this->Segments.size(); i++)
@@ -484,7 +488,7 @@ integer FWBW::get_seg_idx(const real s) const
 
 // --------------------------------------------------------------------------------------------
 
-integer FWBW::get_seg_idx_t(const real t) const
+integer Fb2d::get_seg_idx_t(const real t) const
 {
   integer seg_idx = -1;
   // if t is less that the start time of the first segment
@@ -514,7 +518,7 @@ integer FWBW::get_seg_idx_t(const real t) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalS(const real t) const
+real Fb2d::evalS(const real t) const
 {
   const integer seg_idx = this->get_seg_idx_t(t);
   return this->Segments[seg_idx].S(t);
@@ -522,7 +526,7 @@ real FWBW::evalS(const real t) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalV(const real s) const
+real Fb2d::evalV(const real s) const
 {
   const integer seg_idx = this->get_seg_idx(s);
   return this->Segments[seg_idx].V(s - this->Segments[seg_idx].s0());
@@ -530,7 +534,7 @@ real FWBW::evalV(const real s) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalT(const real s) const
+real Fb2d::evalT(const real s) const
 {
   const integer seg_idx = this->get_seg_idx(s);
   const real T0 = this->Segments[seg_idx].getT0();
@@ -540,7 +544,7 @@ real FWBW::evalT(const real s) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalV_t(const real t) const
+real Fb2d::evalV_t(const real t) const
 {
   const integer seg_idx = this->get_seg_idx_t(t);
   auto const s = this->Segments[seg_idx].S(t);
@@ -549,7 +553,7 @@ real FWBW::evalV_t(const real t) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalAx(const real s) const
+real Fb2d::evalAx(const real s) const
 {
   const integer seg_idx = this->get_seg_idx(s);
   return this->Segments[seg_idx].AX(s - this->Segments[seg_idx].s0());
@@ -557,7 +561,7 @@ real FWBW::evalAx(const real s) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalAx_t(const real t) const
+real Fb2d::evalAx_t(const real t) const
 {
   const integer seg_idx = this->get_seg_idx_t(t);
   auto const s = this->Segments[seg_idx].S(t);
@@ -566,7 +570,7 @@ real FWBW::evalAx_t(const real t) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalAy(const real s) const
+real Fb2d::evalAy(const real s) const
 {
   const integer seg_idx = this->get_seg_idx(s);
   return this->Segments[seg_idx].AY(s - this->Segments[seg_idx].s0());
@@ -574,7 +578,7 @@ real FWBW::evalAy(const real s) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalAy_t(const real t) const
+real Fb2d::evalAy_t(const real t) const
 {
   const integer seg_idx = this->get_seg_idx_t(t);
   auto const s = this->Segments[seg_idx].S(t);
@@ -583,7 +587,7 @@ real FWBW::evalAy_t(const real t) const
 
 // --------------------------------------------------------------------------------------------
 
-real FWBW::evalVmax(const real s) const
+real Fb2d::evalVmax(const real s) const
 {
   const integer seg_idx = this->get_seg_idx(s);
   const real s_norm = (s - this->Segments[seg_idx].s0()) / this->Segments[seg_idx].L();
@@ -593,8 +597,10 @@ real FWBW::evalVmax(const real s) const
 // --------------------------------------------------------------------------------------------
 
 
-real FWBW::evalSegmentType(const real t) const
+real Fb2d::evalSegmentType(const real t) const
 {
   const integer seg_idx = this->get_seg_idx_t(t);
   return static_cast<real>(this->Segments[seg_idx].type());
 }
+
+} // namespace fb::fbga

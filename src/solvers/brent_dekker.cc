@@ -1,4 +1,4 @@
-#include "./FBGA/brentdekker.hxx"
+#include "solvers/brent_dekker.hh"
 
 
 #define DEBUG_IO 0
@@ -7,23 +7,23 @@
 #include <iostream>
 #endif
 
-namespace GG
+namespace fb::solvers
 {
 
-brentdekker::brentdekker(const real tol) : tol(tol), verbose("iter"){ }
+BrentDekker::BrentDekker(const real tol) : tol(tol), verbose("iter"){ }
 
-brentdekker::brentdekker(const real tol, const int max_iter) : tol(tol), max_iter(max_iter), verbose("iter"){}
+BrentDekker::BrentDekker(const real tol, const int max_iter) : tol(tol), max_iter(max_iter), verbose("iter"){}
 
-brentdekker::brentdekker(const real tol, const int max_iter, const std::string &verbose) : tol(tol), max_iter(max_iter), verbose(verbose){}
+BrentDekker::BrentDekker(const real tol, const int max_iter, const std::string &verbose) : tol(tol), max_iter(max_iter), verbose(verbose){}
 
-void brentdekker::setup(const real tol, const int max_iter, const std::string &verbose)
+void BrentDekker::setup(const real tol, const int max_iter, const std::string &verbose)
 {
   this->set_tolerance(tol);
   this->set_max_iter(max_iter);
   this->set_verbose(verbose);
 }
 
-bool brentdekker::solve(const std::function<real(real)> &f, real a, real b, real &x0)
+bool BrentDekker::solve(const std::function<real(real)> &f, real a, real b, real &x0)
 {
   this->flag = false;
   real x1    = a;

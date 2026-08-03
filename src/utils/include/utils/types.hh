@@ -17,10 +17,8 @@
 
 #include <cstddef>
 #include <limits>
-#ifndef TYPES_HXX
-#define TYPES_HXX
 
-namespace GG
+namespace fb::utils
 {
 
   /*\
@@ -60,6 +58,4 @@ namespace GG
   static constexpr real DEG2RAD = PIDIV180;                               //!< Degrees to Gradians static constant value
   static constexpr real RAD2DEG = 1.0 / DEG2RAD;                          //!< Gradians to Degrees static constant value
 
-} // namespace GG
-
-#endif // TYPES_HXX
+} // namespace fb::utils

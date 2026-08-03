@@ -27,6 +27,7 @@ latex
 
 build/
 buildX/
+compile_commands.json
 
 profileRerun.json
 
@@ -67,3 +68,6 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+
+
+.claude/

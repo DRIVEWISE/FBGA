@@ -13,24 +13,28 @@
 (***********************************************************************************)
 */
 
-#ifndef FWBW_HH
-#define FWBW_HH
+#pragma once
 
-#include "brentdekker.hxx"
-#include "segment.hxx"
-#include "types.hxx"
+#include <utils/types.hh>
+#include <utils/segment.hh>
+#include <solvers/brent_dekker.hh>
 #include <functional>
 
-namespace GG
+namespace fb::fbga
 {
 
-using gg_range_max_min = struct gg_range_max_min
+using fb::utils::real;
+using fb::utils::integer;
+using fb::utils::Segment;
+using fb::solvers::BrentDekker;
+
+using GgRangeMaxMin = struct GgRangeMaxMin
 {
   std::function<real(real)> min = nullptr;
   std::function<real(real)> max = nullptr;
 };
 
-using solver_params = struct solver_params
+using SolverParams = struct SolverParams
 {
   real tolerance        = STD_TOL;
   int max_iter          = STD_MAX_ITER;
@@ -39,16 +43,16 @@ using solver_params = struct solver_params
 
 #define VMAX_SPEED 130.0
 
-class FWBW
+class Fb2d
 {
 private:
   /* data */
   std::function<real(real, real)> gg_Upper = nullptr; // Upper bound function
   std::function<real(real, real)> gg_Lower = nullptr; // Lower bound function
-  gg_range_max_min gg_range;     // Range of the curvature (struct with min and max functions)
-  brentdekker BD;                // Solver
-  solver_params solver_p;        // Solver parameters
-  std::vector<segment> Segments; // Vector of segments
+  GgRangeMaxMin gg_range;         // Range of the curvature (struct with min and max functions)
+  BrentDekker BD;                 // Solver
+  SolverParams solver_p;          // Solver parameters
+  std::vector<Segment> Segments; // Vector of segments
   std::vector<real> Vmax_vec;    // Vector of maximum reachable velocities
   std::vector<real> S_vec;       // Vector of abscissas
   std::vector<real> K_vec;       // Vector of curvatures
@@ -57,21 +61,21 @@ private:
   std::vector<int> dump_seg_id;  // Vector of segments with problems for debug
   real max_velocity{VMAX_SPEED}; // maximum velocity allowedq
 protected:
-  FWBW();
+  Fb2d();
   void set_max_velocity(real velocity) {
     max_velocity = velocity;
   }
 public:
   // constructors
-  FWBW(
+  Fb2d(
     const std::function<real(real, real)> &gg_Upper,
     const std::function<real(real, real)> &gg_Lower,
-    const gg_range_max_min &gg_range
+    const GgRangeMaxMin &gg_range
   );
   void setup_functions(
     const std::function<real(real, real)> &gg_Upper,
     const std::function<real(real, real)> &gg_Lower,
-    const gg_range_max_min &gg_range
+    const GgRangeMaxMin &gg_range
   );
   // main methods
   // core Forward-Backward method
@@ -117,6 +121,4 @@ public:
   void check_segments();
 };
 
-} // namespace GG
-
-#endif // FWBW_HH
+} // namespace fb::fbga

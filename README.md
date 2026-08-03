@@ -38,55 +38,32 @@ Cite as:
 
 ### Third party libraries
 
-Some third party libraries are needed to compile the project.
-
-You will need to run the following command to install the third party libraries:
-
-```{shell}
-./third_party.sh
-```
-
-The library is self-contained and standalone, so you don't need to install any other library to use it as is. Third party libraries are used for testing and development purposes.
-
-<!-- Note -->
-
-**Note**: The third party libraries are not included in the repository, so you need to run the command above to download them. Please make sure you have an internet connection when running the command and that you have the necessary permissions to install the libraries.
+Third party libraries (Catch2, cxxopts, rapidcsv) are fetched automatically by CMake via `FetchContent` during configuration, pinned to fixed release tags in `Dependencies.cmake`. You need an internet connection the first time you configure the project; nothing needs to be installed manually.
 
 ## Building
 
-To install the project you need to run the following commands:
-
 ```{shell}
-./build.sh
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
 ```
 
-Default will build the project in release mode, if you want to build in debug mode you can run:
+For a debug build, pass `-DCMAKE_BUILD_TYPE=Debug` instead. Useful options (see the top-level `CMakeLists.txt`):
+
+- `-DFBGA_BUILD_TESTS=OFF` to skip the Catch2 unit tests (`test/`).
+- `-DFBGA_BUILD_EXAMPLES=OFF` to skip the usage examples (`examples/`).
+- `-DFBGA_BUILD_PYTHON=OFF` to skip the Python bindings.
+
+### Running the tests
 
 ```{shell}
-./build.sh -debug
+ctest --test-dir build --output-on-failure
 ```
 
-For further information you can run:
+### Running the examples
+
+Examples must be run from the repository root, since they read data files with paths relative to it (e.g. `data/paper/...`):
 
 ```{shell}
-./build.sh -h
-```
-
-### Alternative build
-
-If you want to install the project in a different directory you can run:
-
-```{shell}
-mkdir -p build
-cd build
-cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..
-make -j
-```
-
-### Running the examples 
-
-To run the tests you can use the following command:
-
-```{shell}
-./bin/FBGA_test_moto.exe
+./build/examples/fbga/fbga_example_basic
+./build/examples/fbga/fbga_example_moto
 ```

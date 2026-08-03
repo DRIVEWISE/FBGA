@@ -1,13 +1,12 @@
-#ifndef SEGMENT_HXX
-#define SEGMENT_HXX
+#pragma once
 
-#include "types.hxx"
+#include <utils/types.hh>
 #include <string>
 #include <cmath>
 
-#include "gg_utils.hxx"
+#include <utils/gg_utils.hh>
 
-namespace GG
+namespace fb::utils
 {
 
   template<typename T>
@@ -19,7 +18,7 @@ namespace GG
   constexpr T eval_v2(const T& S, const T& A, const T& V0) {
       return static_cast<T>(2) * A * S + std::pow(V0, 2);
   }
-  class segment
+  class Segment
   {
   private:
     real m_s0{0};
@@ -32,15 +31,15 @@ namespace GG
     real m_T{-1.0}; // Total time
     real m_T0{-1.0}; // Total time
     real m_T1{-1.0}; // Total time
-    SegmentType m_type{UNKNOWN};
+    SegmentType m_type{SegmentType::UNKNOWN};
   public:
     // constructors
-    segment() = default;
+    Segment() = default;
     //
-    segment(const real L, const real v0, const real k0, const real k1) 
+    Segment(const real L, const real v0, const real k0, const real k1)
     : m_s1(L), m_v0(v0), m_L(L), m_k0(k0), m_k1(k1) {}
     //
-    segment(const real s0, const real L, const real v0, const real k0, const real k1)
+    Segment(const real s0, const real L, const real v0, const real k0, const real k1)
     : m_s0(s0), m_s1(s0 + L), m_v0(v0), m_L(L), m_k0(k0), m_k1(k1) {}
     // setters
     void set_s0(const real s0){ this->m_s0 = s0; }
@@ -87,8 +86,8 @@ namespace GG
     [[nodiscard]] real AYF() const { return this->m_k1 * std::pow(this->VF(),2); }
     // eval t (generic)
     static real eval_t(const real s, const real a, const real v0) { return static_cast<real>(2)*s / (v0 + eval_v(s,a,v0)); }
-    [[nodiscard]] real S(const real t_tot) const 
-    { 
+    [[nodiscard]] real S(const real t_tot) const
+    {
       real const t = t_tot - this->m_T0;
       return 1.0/2.0*this->m_a*t*t + this->m_v0*t + this->m_s0;
     }
@@ -105,15 +104,17 @@ namespace GG
     [[nodiscard]] real getT() const { return this->m_T; }
     [[nodiscard]] real getT0() const { return this->m_T0; }
     [[nodiscard]] real getT1() const { return this->m_T1; }
-    
+
   };
 
 
 
+  // NOTE: these two structs look 3D-specific (euler angles, curvature-frame offsets) and don't
+  // belong to a 2D FBGA module conceptually. Left here for now; revisit when porting FBGA_3D.
   struct NodeStruct3D
   {
     // STATIC MEMBERS (GIVEN)
-    //// Length 
+    //// Length
     real s{0};
     //// geometry (given)
     ///// euler angles
@@ -138,7 +139,7 @@ namespace GG
     real g_x{0.0};
     real g_y{0.0};
     real g_z{0.0};
-    //// Geometric Omegas 
+    //// Geometric Omegas
     real Omega_x{0.0};
     real Omega_y{0.0};
     real Omega_z{0.0};
@@ -159,7 +160,7 @@ namespace GG
     real L{0};
     size_type ID0{0};
     size_type ID1{0};
-    SegmentType m_type{UNKNOWN};
+    SegmentType m_type{SegmentType::UNKNOWN};
     real V_max{130.0};
     real V_dot{QUIET_NAN};
     real V_0{0.0};
@@ -167,6 +168,3 @@ namespace GG
   };
 
 }
-
-
-#endif
