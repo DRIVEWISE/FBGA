@@ -1,4 +1,4 @@
-name: vprim_py_env
+name: fbga_py_env
 channels:
   - conda-forge
 dependencies:

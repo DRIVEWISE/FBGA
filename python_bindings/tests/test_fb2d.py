@@ -1,6 +1,6 @@
 """
-Tests for the fbga_py bindings, mirroring src_tests/FBGA_test_basic.cc
-(friction-circle G-G bounds driving the FWBW forward-backward solver).
+Tests for the fbga_py bindings, mirroring examples/fbga/basic.cc
+(friction-circle G-G bounds driving the Fb2d forward-backward solver).
 """
 
 import math
@@ -36,7 +36,7 @@ def gg_range_max(v: float) -> float:
 
 @pytest.fixture
 def gg_range():
-    r = fb.GGRangeMaxMin()
+    r = fb.GgRangeMaxMin()
     r.min = gg_range_min
     r.max = gg_range_max
     return r
@@ -44,7 +44,7 @@ def gg_range():
 
 @pytest.fixture
 def solver(gg_range):
-    return fb.FWBW(gg_upper, gg_lower, gg_range)
+    return fb.Fb2d(gg_upper, gg_lower, gg_range)
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ def test_gg_range_roundtrip(gg_range):
     assert gg_range.max(10.0) == pytest.approx(MU_Y * G)
 
 
-def test_fwbw_construction(solver):
+def test_fb2d_construction(solver):
     assert solver is not None
 
 

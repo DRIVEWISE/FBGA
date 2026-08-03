@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Example: use the FWBW solver from Python with lambda-defined G-G bounds,
+Example: use the Fb2d solver from Python with lambda-defined G-G bounds,
 and plot the resulting velocity/acceleration profiles and the G-G diagram.
 
 Scenario mirrors src_tests/FBGA_test_basic.cc (friction-circle bounds).
@@ -16,7 +16,7 @@ import fbga_py as fb
 
 def main():
     print("FBGA - Forward Backward Generic Acceleration constraints")
-    print(" > Running FWBW example with Python lambda functions")
+    print(" > Running Fb2d example with Python lambda functions")
 
     # 1. Define track data
     SS_vec = [0.0, 50.0, 100.0, 150.0, 200.0]           # Arc length [m]
@@ -65,13 +65,13 @@ def main():
         return -mu_y * g
 
     # Create the range struct
-    gg_range = fb.GGRangeMaxMin()
+    gg_range = fb.GgRangeMaxMin()
     gg_range.min = ay_min_func
     gg_range.max = ay_max_func
 
-    # 3. Create FWBW object with lambda functions
-    print(" > Creating FWBW instance with lambda functions...")
-    fwbw_solver = fb.FWBW(gg_upper, gg_lower, gg_range)
+    # 3. Create Fb2d object with lambda functions
+    print(" > Creating Fb2d instance with lambda functions...")
+    fb2d_solver = fb.Fb2d(gg_upper, gg_lower, gg_range)
 
     # 4. Test the functions by evaluating at test points
     test_v, test_ay = 10.0, 2.0
@@ -86,10 +86,10 @@ def main():
     print(f" > Track length: {SS_vec[-1]} m")
     print(f" > Initial velocity: {v_initial} m/s")
 
-    total_time = fwbw_solver.compute(SS_eval_vec, KK_eval_vec, v_initial)
+    total_time = fb2d_solver.compute(SS_eval_vec, KK_eval_vec, v_initial)
 
     # 6. Extract results
-    AX_eval_vec, AY_eval_vec, VX_eval_vec = fwbw_solver.evaluate(SS_eval_vec)
+    AX_eval_vec, AY_eval_vec, VX_eval_vec = fb2d_solver.evaluate(SS_eval_vec)
 
     print(f" > Total lap time: {total_time:.3f} seconds")
     print(f" > Final velocity: {VX_eval_vec[-1]:.3f} m/s")
@@ -105,7 +105,7 @@ def main():
 
 def create_plots(SS_eval_vec, VX_eval_vec, AX_eval_vec, AY_eval_vec, KK_eval_vec,
                   gg_upper, gg_lower, ay_max_func, ay_min_func):
-    """Create comprehensive plots for the FWBW results."""
+    """Create comprehensive plots for the Fb2d results."""
 
     print("\nCreating plots...")
 
@@ -148,7 +148,7 @@ def create_plots(SS_eval_vec, VX_eval_vec, AX_eval_vec, AY_eval_vec, KK_eval_vec
                        gg_upper, gg_lower, ay_max_func, ay_min_func)
 
     plt.tight_layout()
-    out_path = "fwbw_example_plots.png"
+    out_path = "fb2d_example_plots.png"
     plt.savefig(out_path, dpi=150)
     print(f" > Saved 2D plots to {out_path}")
     plt.show()
@@ -227,7 +227,7 @@ def create_3d_plot(AY_eval_vec, VX_eval_vec, AX_eval_vec,
     ax.view_init(elev=20, azim=45)
 
     plt.tight_layout()
-    out_path = "fwbw_example_3d.png"
+    out_path = "fb2d_example_3d.png"
     plt.savefig(out_path, dpi=150)
     print(f" > Saved 3D plot to {out_path}")
     plt.show()
@@ -236,7 +236,7 @@ def create_3d_plot(AY_eval_vec, VX_eval_vec, AX_eval_vec,
 if __name__ == "__main__":
     try:
         main()
-        print("\nFWBW example completed successfully!")
+        print("\nFb2d example completed successfully!")
     except Exception as exc:
         print(f"Error: {exc}")
         print("Make sure the fbga_py module is built and installed correctly.")
