@@ -17,6 +17,8 @@ namespace fb::utils
     FORWARD_NAN = 4,
     BACKWARD_NAN = 5,
     TRANSITION_NAN = 6,
+    YELLOWFLAG = 7,
+    YELLOWFLAG_NAN = 8,
     UNKNOWN = 0
   };
 

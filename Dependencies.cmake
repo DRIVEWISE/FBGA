@@ -27,3 +27,19 @@ if(FBGA_BUILD_EXAMPLES)
   )
   FetchContent_MakeAvailable(rapidcsv)
 endif()
+
+# libnpy - header-only .npy reader, needed by fbga3d's GggvIndy (loads spline data
+# from .npy files) when FBGA_BUILD_3D is ON. Upstream ships no CMakeLists.txt (meson
+# only), so FetchContent_MakeAvailable() just populates the source; wrap the header in
+# an INTERFACE target ourselves.
+if(FBGA_BUILD_3D)
+  FetchContent_Declare(
+    libnpy
+    GIT_REPOSITORY https://github.com/llohse/libnpy.git
+    GIT_TAG v1.0.1
+  )
+  FetchContent_MakeAvailable(libnpy)
+
+  add_library(libnpy INTERFACE)
+  target_include_directories(libnpy INTERFACE ${libnpy_SOURCE_DIR}/include)
+endif()

@@ -1,0 +1,2 @@
+add_executable(fbga3d_example_gggv_demo gggv_demo.cc)
+target_link_libraries(fbga3d_example_gggv_demo PRIVATE fbga::fbga3d project_warnings)

@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(FBGA_BUILD_TESTS "Build Catch2 unit tests" ON)
 option(FBGA_BUILD_EXAMPLES "Build usage examples" ON)
 option(FBGA_BUILD_PYTHON "Build pybind11 module" ON)
+option(FBGA_BUILD_3D "Build the fbga3d module (ported from FBGA_3D)" OFF)
 option(FBGA_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
 # Compiler warnings, exposed as an INTERFACE target so every in-repo target can opt
