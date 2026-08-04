@@ -63,3 +63,32 @@ total_time = solver.compute(SS=[0.0, 10.0, 20.0], KK=[0.0, 0.0, 0.0], v0=20.0)
 ```
 
 See `examples/example_fb2d_plots.py` for a complete, runnable example with plotting.
+
+### fbga3d (`FbgaIndy` / `FbgaMoto`)
+
+The 3D forward-backward solver is also bound, generic over the vehicle's GG-diagram model
+(`GggvIndy`, spline-based; `GggvMoto`, closed-form). Both `FbgaIndy` and `FbgaMoto` expose the
+same API (`compute`, `get_solution`, `eval_V`, `eval_A_tilde_x`, ...) since they're both
+instantiations of the same C++ template -- see `src/fbga3d/include/fbga3d/fbga3d_solver.hh`.
+
+```python
+import fbga_py as fb
+
+TOA = fb.TrajectoryOffsetAndAnglesContainer(
+    offset=fb.TrajectoryOffsetContainer(n=[0.0, 0.0, 0.0], chi=[0.0, 0.0, 0.0]),
+    reference=fb.RoadAnglesAndDerivativesContainer(
+        mu=[0.0, 0.0, 0.0], phi=[0.0, 0.0, 0.0], theta=[0.0, 0.05, 0.1],
+        mu_prime=[0.0, 0.0, 0.0], phi_prime=[0.0, 0.0, 0.0], theta_prime=[0.001, 0.005, 0.0],
+        abscissa=[0.0, 50.0, 100.0],
+    ),
+    adherence=fb.AdherenceContainer(alpha=[1.0, 1.0, 1.0]),
+)
+
+solver = fb.FbgaMoto()  # or fb.FbgaIndy() -- reads ./data/INDY/*.npy relative to the CWD
+total_time = solver.compute(TOA, v_initial=20.0)
+sol = solver.get_solution()
+```
+
+Plotting (`eval_shell_plot*`) and constraint-satisfaction-checking helpers from the original
+FBGA_3D aren't ported to the C++ core yet (see `.claude/FBGA3D_INTEGRATION_PLAN.md`), so they
+aren't bound here either.

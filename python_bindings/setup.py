@@ -5,11 +5,12 @@ from pybind11.setup_helpers import Pybind11Extension, build_ext
 import glob
 
 # Collect all C++ source files from the library's modules (src/utils, src/solvers,
-# src/fbga). The paths are relative to this setup.py file.
+# src/fbga, src/fbga3d). The paths are relative to this setup.py file.
 fbga_sources = (
     glob.glob("../src/utils/*.cc")
     + glob.glob("../src/solvers/*.cc")
     + glob.glob("../src/fbga/*.cc")
+    + glob.glob("../src/fbga3d/*.cc")
 )
 
 ext_modules = [
@@ -18,12 +19,17 @@ ext_modules = [
         # The source files for the extension: the bindings plus all library sources.
         ["bindings.cc"] + fbga_sources,
         # Include directories: one per module's public include/ dir, matching how
-        # each module is consumed via CMake (`#include <utils/...>`, `<solvers/...>`, `<fbga/...>`).
-        # pybind11.setup_helpers automatically adds pybind11's includes.
+        # each module is consumed via CMake (`#include <utils/...>`, `<solvers/...>`, `<fbga/...>`,
+        # `<fbga3d/...>`). pybind11.setup_helpers automatically adds pybind11's includes.
+        # third_party/libnpy is a single vendored header (MIT, pinned to the same v1.0.1 tag as
+        # Dependencies.cmake's FetchContent) since this setuptools build doesn't go through CMake
+        # and so can't reuse its FetchContent-fetched copy.
         include_dirs=[
             "../src/utils/include",
             "../src/solvers/include",
             "../src/fbga/include",
+            "../src/fbga3d/include",
+            "third_party/libnpy/include",
         ],
         language='c++',
         cxx_std=20,
