@@ -281,6 +281,42 @@ private:
     return (v0 * (1 - s_norm)) + (v1 * s_norm);
   }
 
+  // Everything derivable from (node, V) alone -- independent of V_dot. Root-finds that hold
+  // (node, V) fixed while searching over V_dot (get_max/min_longitudinal_performance(_YF)) compute
+  // this once and reuse it across every Brent-Dekker iteration, instead of recomputing the same
+  // trig/kinematics on every evaluation. See FBGA3D_INTEGRATION_PLAN.md.
+  struct NodeVelocityState
+  {
+    real cos_chi{1}, sin_chi{0};
+    real inv_den_common{1}, inv_den_common2{1};
+    real s_dot{0}, w{0}, chi_dot{0}, n_dot{0};
+    real omega_hat_x{0}, omega_hat_y{0}, omega_hat_z{0};
+    real a_tilde_y{0}; // V_dot-independent, so computed here once
+    real s_ddotA{0};   // the V_dot-independent half of s_ddot
+  };
+
+  [[nodiscard]] NodeVelocityState compute_velocity_state(NodeStruct3D const &node, real V) const
+  {
+    NodeVelocityState st;
+    st.cos_chi = std::cos(node.chi);
+    st.sin_chi = std::sin(node.chi);
+    const real den_common = node.Omega_z * node.n - 1.0;
+    st.inv_den_common = 1.0 / den_common;
+    st.inv_den_common2 = st.inv_den_common * st.inv_den_common;
+    st.s_dot = V * st.cos_chi * (-st.inv_den_common);
+    st.w = node.Omega_x * st.s_dot * node.n;
+    st.chi_dot = this->m_ablation_flags.compute_chi_dot ? node.chi_prime * st.s_dot : 0.0;
+    st.n_dot = V * st.sin_chi;
+    st.omega_hat_x = (st.sin_chi * node.Omega_y + st.cos_chi * node.Omega_x) * st.s_dot;
+    st.omega_hat_y = (st.cos_chi * node.Omega_y - st.sin_chi * node.Omega_x) * st.s_dot;
+    st.omega_hat_z = node.Omega_z * st.s_dot + st.chi_dot;
+    st.a_tilde_y = (st.omega_hat_z * V) - (st.omega_hat_x * st.w) + node.g_y;
+    st.s_ddotA = this->m_ablation_flags.compute_s_ddot
+      ? -V * st.cos_chi * (node.Omega_z_prime * st.s_dot * node.n + node.Omega_z * st.sin_chi * V) * st.inv_den_common2
+      : 0.0;
+    return st;
+  }
+
   // --------------------------------------------------------------------------------------------
 
   void create_nodes_cells(TrajectoryOffsetAndAnglesContainer const &TOA)
@@ -415,16 +451,17 @@ private:
 
   [[nodiscard]] real get_max_longitudinal_performance(NodeStruct3D const &node, real V)
   {
-    auto F2solve = [this, &node, V](const real V_dot) -> real {
-      return this->max_longitudinal_performance_func(node, V, V_dot);
+    const NodeVelocityState st = this->compute_velocity_state(node, V);
+    auto F2solve = [this, &node, &st, V](const real V_dot) -> real {
+      return this->max_longitudinal_performance_func(node, st, V, V_dot);
     };
 
-    const real V_dot_0 = this->eval_V_dot_Vatildex(node, V, this->gggv.a_x_neutral(V));
+    const real V_dot_0 = eval_V_dot_Vatildex(node, st, this->gggv.a_x_neutral(V));
     // Self-consistent load-transfer estimate: both vehicles now use the converted V_dot_0 here
     // (FBGA_3D's FBGA_INDY originally reused the raw neutral value instead, which is only
     // equivalent on flat/non-rotating road segments -- see FBGA3D_INTEGRATION_PLAN.md).
-    const real a_tilde_x_top = this->eval_a_tilde_x_max(node, V, V_dot_0);
-    real V_dot_max = this->eval_V_dot_Vatildex(node, V, a_tilde_x_top);
+    const real a_tilde_x_top = this->eval_a_tilde_x_max(node, st, V, V_dot_0);
+    real V_dot_max = eval_V_dot_Vatildex(node, st, a_tilde_x_top);
 
     if ((std::abs(V_dot_max - V_dot_0) <= this->solver_p.tolerance) ||
         (std::abs(F2solve(V_dot_max)) <= this->solver_p.tolerance))
@@ -451,12 +488,13 @@ private:
 
   [[nodiscard]] real get_min_longitudinal_performance(NodeStruct3D const &node, real V)
   {
-    auto F2solve = [this, &node, V](const real V_dot) -> real {
-      return this->min_longitudinal_performance_func(node, V, V_dot);
+    const NodeVelocityState st = this->compute_velocity_state(node, V);
+    auto F2solve = [this, &node, &st, V](const real V_dot) -> real {
+      return this->min_longitudinal_performance_func(node, st, V, V_dot);
     };
-    const real V_dot_0 = this->eval_V_dot_Vatildex(node, V, 0.0);
-    const real a_tilde_x_bottom = this->eval_a_tilde_x_min(node, V, 0.0);
-    real V_dot_min = this->eval_V_dot_Vatildex(node, V, a_tilde_x_bottom);
+    const real V_dot_0 = eval_V_dot_Vatildex(node, st, 0.0);
+    const real a_tilde_x_bottom = this->eval_a_tilde_x_min(node, st, V, 0.0);
+    real V_dot_min = eval_V_dot_Vatildex(node, st, a_tilde_x_bottom);
     if (std::abs(V_dot_min - V_dot_0) <= this->solver_p.tolerance)
     {
       return V_dot_min;
@@ -482,28 +520,33 @@ private:
     return ok ? V_dot_sol : V_dot_0;
   }
 
-  [[nodiscard]] real min_longitudinal_performance_func(NodeStruct3D const &node, real V, real V_dot) const
+  [[nodiscard]] real min_longitudinal_performance_func(
+    NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot
+  ) const
   {
     Context ctx;
-    this->compute_context(node, V, V_dot, ctx);
+    this->compute_context(node, st, V, V_dot, ctx);
     return ctx.a_tilde_x - ctx.a_tilde_x_min - this->solver_p.tolerance;
   }
 
-  [[nodiscard]] real max_longitudinal_performance_func(NodeStruct3D const &node, real V, real V_dot) const
+  [[nodiscard]] real max_longitudinal_performance_func(
+    NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot
+  ) const
   {
     Context ctx;
-    this->compute_context(node, V, V_dot, ctx);
+    this->compute_context(node, st, V, V_dot, ctx);
     return ctx.a_tilde_x - ctx.a_tilde_x_max + this->solver_p.tolerance;
   }
 
   [[nodiscard]] real get_min_longitudinal_performance_YF(NodeStruct3D const &node, real V)
   {
-    auto F2solve = [this, &node, V](const real V_dot) -> real {
-      return this->min_longitudinal_performance_func_YF(node, V, V_dot);
+    const NodeVelocityState st = this->compute_velocity_state(node, V);
+    auto F2solve = [this, &node, &st, V](const real V_dot) -> real {
+      return this->min_longitudinal_performance_func_YF(node, st, V, V_dot);
     };
-    const real V_dot_0 = this->eval_V_dot_Vatildex(node, V, 0.0);
-    const real a_tilde_x_bottom = this->eval_a_tilde_x_min_YF(node, V, 0.0);
-    real V_dot_min = this->eval_V_dot_Vatildex(node, V, a_tilde_x_bottom);
+    const real V_dot_0 = eval_V_dot_Vatildex(node, st, 0.0);
+    const real a_tilde_x_bottom = this->eval_a_tilde_x_min_YF(node, st, V, 0.0);
+    real V_dot_min = eval_V_dot_Vatildex(node, st, a_tilde_x_bottom);
     if (std::abs(V_dot_min - V_dot_0) <= this->solver_p.tolerance)
     {
       return V_dot_min;
@@ -529,9 +572,11 @@ private:
     return ok ? V_dot_sol : V_dot_0;
   }
 
-  [[nodiscard]] real min_longitudinal_performance_func_YF(NodeStruct3D const &node, real V, real V_dot) const
+  [[nodiscard]] real min_longitudinal_performance_func_YF(
+    NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot
+  ) const
   {
-    return this->eval_a_tilde_x(node, V, V_dot) - this->eval_a_tilde_x_min_YF(node, V, V_dot) - this->solver_p.tolerance;
+    return eval_a_tilde_x(node, st, V_dot) - this->eval_a_tilde_x_min_YF(node, st, V, V_dot) - this->solver_p.tolerance;
   }
 
   // --------------------------------------------------------------------------------------------
@@ -772,31 +817,19 @@ private:
 
   void compute_context(NodeStruct3D const &node, real V, real V_dot, Context &ctx) const
   {
-    ctx.cos_chi = std::cos(node.chi);
-    ctx.sin_chi = std::sin(node.chi);
-    ctx.den_common = node.Omega_z * node.n - 1.0;
-    ctx.inv_den_common = 1.0 / ctx.den_common;
-    ctx.inv_den_common2 = std::pow(ctx.inv_den_common, 2.0);
-    ctx.inv_den_common3 = std::pow(ctx.inv_den_common, 3.0);
+    this->compute_context(node, this->compute_velocity_state(node, V), V, V_dot, ctx);
+  }
 
-    ctx.s_dot = V * ctx.cos_chi * (-ctx.inv_den_common);
-    ctx.w = node.Omega_x * ctx.s_dot * node.n;
-    ctx.chi_dot = this->m_ablation_flags.compute_chi_dot ? node.chi_prime * ctx.s_dot : 0.0;
-    ctx.n_dot = V * ctx.sin_chi;
+  void compute_context(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot, Context &ctx) const
+  {
+    const real s_ddotB = (st.chi_dot * st.cos_chi * V - st.cos_chi * V_dot) * st.inv_den_common;
+    const real s_ddot = (!this->m_ablation_flags.compute_s_ddot) ? 0.0 : st.s_ddotA + s_ddotB;
+    const real w_dot = node.Omega_x * st.s_dot * st.n_dot + node.Omega_x * s_ddot * node.n +
+                        node.Omega_x_prime * st.s_dot * st.s_dot * node.n;
 
-    ctx.omega_hat_x = (ctx.sin_chi * node.Omega_y + ctx.cos_chi * node.Omega_x) * ctx.s_dot;
-    ctx.omega_hat_y = (ctx.cos_chi * node.Omega_y - ctx.sin_chi * node.Omega_x) * ctx.s_dot;
-    ctx.omega_hat_z = node.Omega_z * ctx.s_dot + ctx.chi_dot;
-
-    ctx.s_ddotA = -V * ctx.cos_chi * (node.Omega_z_prime * ctx.s_dot * node.n + node.Omega_z * ctx.sin_chi * V) * ctx.inv_den_common2;
-    ctx.s_ddotB = (ctx.chi_dot * ctx.cos_chi * V - ctx.cos_chi * V_dot) * ctx.inv_den_common;
-    ctx.s_ddot = (!this->m_ablation_flags.compute_s_ddot) ? 0.0 : ctx.s_ddotA + ctx.s_ddotB;
-    ctx.w_dot = node.Omega_x * ctx.s_dot * ctx.n_dot + node.Omega_x * ctx.s_ddot * node.n +
-                node.Omega_x_prime * ctx.s_dot * ctx.s_dot * node.n;
-
-    ctx.a_tilde_x = (ctx.omega_hat_y * ctx.w) + V_dot + node.g_x;
-    ctx.a_tilde_y = (ctx.omega_hat_z * V) - (ctx.omega_hat_x * ctx.w) + node.g_y;
-    ctx.a_tilde_z = ctx.w_dot - (ctx.omega_hat_y * V) + node.g_z;
+    ctx.a_tilde_x = (st.omega_hat_y * st.w) + V_dot + node.g_x;
+    ctx.a_tilde_y = st.a_tilde_y;
+    ctx.a_tilde_z = w_dot - (st.omega_hat_y * V) + node.g_z;
 
     ctx.a_tilde_y_lim = (node.alpha * this->gggv.a_y_lim(V, ctx.a_tilde_z) - this->m_lat_tol);
     ctx.a_tilde_y_clip = clip(ctx.a_tilde_y, -ctx.a_tilde_y_lim, ctx.a_tilde_y_lim);
@@ -863,6 +896,11 @@ private:
     return eval_a_hat_x(node, V, V_dot) + node.g_x;
   }
 
+  [[nodiscard]] static real eval_a_tilde_x(NodeStruct3D const &node, NodeVelocityState const &st, real V_dot)
+  {
+    return eval_a_hat_x(st, V_dot) + node.g_x;
+  }
+
   [[nodiscard]] static real eval_a_hat_x(NodeStruct3D const &node, real V, real V_dot)
   {
     const real cos_chi = std::cos(node.chi);
@@ -873,6 +911,11 @@ private:
     return (omega_hat_y * w) + V_dot;
   }
 
+  [[nodiscard]] static real eval_a_hat_x(NodeVelocityState const &st, real V_dot)
+  {
+    return (st.omega_hat_y * st.w) + V_dot;
+  }
+
   [[nodiscard]] static real eval_V_dot_Vatildex(NodeStruct3D const &node, real V, real atildex)
   {
     const real cos_chi = std::cos(node.chi);
@@ -881,6 +924,11 @@ private:
     const real w = node.Omega_x * s_dot * node.n;
     const real omega_hat_y = (cos_chi * node.Omega_y - sin_chi * node.Omega_x) * s_dot;
     return atildex - node.g_x - (omega_hat_y * w);
+  }
+
+  [[nodiscard]] static real eval_V_dot_Vatildex(NodeStruct3D const &node, NodeVelocityState const &st, real atildex)
+  {
+    return atildex - node.g_x - (st.omega_hat_y * st.w);
   }
 
   [[nodiscard]] static real eval_V_dot_Vahatx(NodeStruct3D const &node, real V, real ahatx)
@@ -901,6 +949,11 @@ private:
   [[nodiscard]] real eval_a_tilde_z(NodeStruct3D const &node, real V, real V_dot) const
   {
     return this->eval_a_hat_z(node, V, V_dot) + node.g_z;
+  }
+
+  [[nodiscard]] real eval_a_tilde_z(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot) const
+  {
+    return this->eval_a_hat_z(node, st, V, V_dot) + node.g_z;
   }
 
   [[nodiscard]] real eval_a_hat_y(NodeStruct3D const &node, real V) const
@@ -928,6 +981,15 @@ private:
     return w_dot - (omega_hat_y * V);
   }
 
+  [[nodiscard]] real eval_a_hat_z(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot) const
+  {
+    const real s_ddotB = (st.chi_dot * st.cos_chi * V - st.cos_chi * V_dot) * st.inv_den_common;
+    const real s_ddot = this->m_ablation_flags.compute_s_ddot ? st.s_ddotA + s_ddotB : 0.0;
+    const real w_dot = node.Omega_x * st.s_dot * st.n_dot + node.Omega_x * s_ddot * node.n +
+                        node.Omega_x_prime * st.s_dot * st.s_dot * node.n;
+    return w_dot - (st.omega_hat_y * V);
+  }
+
   [[nodiscard]] real eval_a_tilde_y_lim(NodeStruct3D const &node, real V, real V_dot) const
   {
     const real a_tilde_z = this->eval_a_tilde_z(node, V, V_dot);
@@ -941,6 +1003,12 @@ private:
     return this->gggv.a_x_push(a_tilde_y, V, a_tilde_z, node.alpha);
   }
 
+  [[nodiscard]] real eval_a_tilde_x_max(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot) const
+  {
+    const real a_tilde_z = this->eval_a_tilde_z(node, st, V, V_dot);
+    return this->gggv.a_x_push(st.a_tilde_y, V, a_tilde_z, node.alpha);
+  }
+
   [[nodiscard]] real eval_a_tilde_x_min(NodeStruct3D const &node, real V, real V_dot) const
   {
     const real a_tilde_y = this->eval_a_tilde_y(node, V);
@@ -948,9 +1016,21 @@ private:
     return this->gggv.a_x_pull(a_tilde_y, V, a_tilde_z, node.alpha);
   }
 
+  [[nodiscard]] real eval_a_tilde_x_min(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot) const
+  {
+    const real a_tilde_z = this->eval_a_tilde_z(node, st, V, V_dot);
+    return this->gggv.a_x_pull(st.a_tilde_y, V, a_tilde_z, node.alpha);
+  }
+
   [[nodiscard]] real eval_a_tilde_x_min_YF(NodeStruct3D const &node, real V, real V_dot) const
   {
     const real a_tilde_x_min = this->eval_a_tilde_x_min(node, V, V_dot);
+    return std::max(a_tilde_x_min, this->m_yellow_flag_data.a_des_min);
+  }
+
+  [[nodiscard]] real eval_a_tilde_x_min_YF(NodeStruct3D const &node, NodeVelocityState const &st, real V, real V_dot) const
+  {
+    const real a_tilde_x_min = this->eval_a_tilde_x_min(node, st, V, V_dot);
     return std::max(a_tilde_x_min, this->m_yellow_flag_data.a_des_min);
   }
 

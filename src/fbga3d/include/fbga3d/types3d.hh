@@ -157,17 +157,12 @@ struct ConstraintViolationForSegments
   integer num_violations = 0;
 };
 
-// Per-node kinematic quantities computed during a single evaluation step
+// Per-node kinematic quantities computed during a single evaluation step. The (node, V)-only
+// kinematics (cos_chi, s_dot, omega_hat_*, ...) that used to live here now live in
+// Fbga3dSolver::NodeVelocityState, computed once and reused across a Brent-Dekker solve instead
+// of being recomputed into this struct on every iteration -- see FBGA3D_INTEGRATION_PLAN.md.
 struct Context
 {
-  real cos_chi{1}, sin_chi{0};
-  real den_common{1}, inv_den_common{1}, inv_den_common2{1}, inv_den_common3{1};
-  real s_dot{0}, w{0}, chi_dot{0}, n_dot{0};
-
-  real s_ddotA{0}, s_ddotB{0}, s_ddot{0}, w_dot{0};
-
-  real omega_hat_x{0}, omega_hat_y{0}, omega_hat_z{0};
-
   real a_tilde_x{0}, a_tilde_y{0}, a_tilde_z{0};
 
   real a_tilde_y_lim{0}, a_tilde_y_clip{0};
