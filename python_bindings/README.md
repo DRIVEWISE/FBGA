@@ -4,7 +4,16 @@ This directory contains the Python bindings for the `FBGA` C++ library. It allow
 
 ## Installation
 
-To build and install the Python package, you need a C++20 compatible compiler. We provide two recommended ways to set up your environment: using `conda` or using a Python virtual environment (`venv`).
+The published package is `fbga_py` on PyPI:
+
+```bash
+pip install fbga_py
+```
+
+Since `fbga_py` is a compiled C++20 extension, `pip` will build it from source unless a
+prebuilt wheel is available for your platform/Python version, so you need a C++20
+compatible compiler either way. We provide two recommended ways to set up your
+environment: using `conda` or using a Python virtual environment (`venv`).
 
 ### Option 1: Using Conda (Recommended)
 
@@ -18,8 +27,9 @@ Conda can automatically install a compatible C++ compiler for you, which simplif
     conda activate fbga_py_env
     ```
 
-2. **Install the package:**
-    Once the environment is active, install the package in editable mode using `pip`.
+2. **Install the package for local development:**
+    Once the environment is active, install the package in editable mode using `pip`,
+    run from the **repository root** (the packaging root, not `python_bindings/`).
 
     ```bash
     pip install -e .
@@ -30,7 +40,7 @@ Conda can automatically install a compatible C++ compiler for you, which simplif
 If you prefer not to use Conda, you can use a standard Python virtual environment. You must ensure you have a C++20 compiler (e.g., GCC, Clang, or MSVC) installed and available in your system's PATH.
 
 ```bash
-# Navigate to this directory (python_bindings/)
+# From the repository root (the packaging root, not python_bindings/)
 # It is highly recommended to use a virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
@@ -92,3 +102,9 @@ sol = solver.get_solution()
 Plotting (`eval_shell_plot*`) and constraint-satisfaction-checking helpers from the original
 FBGA_3D aren't ported to the C++ core yet (see `.claude/FBGA3D_INTEGRATION_PLAN.md`), so they
 aren't bound here either.
+
+**Known limitation:** `GggvIndy`'s default constructor loads spline data from
+`./data/INDY/*.npy`, resolved relative to the process's current working directory --
+this path isn't packaged with `fbga_py`. `FbgaIndy()`/`GggvIndy()` only work if your CWD
+happens to contain a `data/INDY/` directory (e.g. running from a checkout of this repo);
+`FbgaMoto` has no such dependency and works standalone.

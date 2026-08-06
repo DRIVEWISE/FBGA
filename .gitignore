@@ -68,6 +68,13 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# scikit-build-core / pip build artifacts (repo root is the packaging root)
+*.egg-info/
+dist/
+wheelhouse/
+_skbuild/
+*.so
+
 
 
 .claude/

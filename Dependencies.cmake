@@ -32,7 +32,7 @@ endif()
 # from .npy files) when FBGA_BUILD_3D is ON. Upstream ships no CMakeLists.txt (meson
 # only), so FetchContent_MakeAvailable() just populates the source; wrap the header in
 # an INTERFACE target ourselves.
-if(FBGA_BUILD_3D)
+if(FBGA_BUILD_3D OR FBGA_BUILD_PYTHON)
   FetchContent_Declare(
     libnpy
     GIT_REPOSITORY https://github.com/llohse/libnpy.git
@@ -42,4 +42,19 @@ if(FBGA_BUILD_3D)
 
   add_library(libnpy INTERFACE)
   target_include_directories(libnpy INTERFACE ${libnpy_SOURCE_DIR}/include)
+endif()
+
+# pybind11 - needed by src/python when FBGA_BUILD_PYTHON is ON. find_package first
+# (scikit-build-core sets pybind11_DIR via its pybind11 build dependency), FetchContent
+# fallback for a plain CMake configure.
+if(FBGA_BUILD_PYTHON)
+  find_package(pybind11 CONFIG QUIET)
+  if(NOT pybind11_FOUND)
+    FetchContent_Declare(
+      pybind11
+      GIT_REPOSITORY https://github.com/pybind/pybind11.git
+      GIT_TAG v2.13.6
+    )
+    FetchContent_MakeAvailable(pybind11)
+  endif()
 endif()

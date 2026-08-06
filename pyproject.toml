@@ -1,0 +1,37 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "pybind11>=2.13"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "fbga_py"
+dynamic = ["version"]
+description = "Python bindings for the FBGA (Forward-Backward Generic Acceleration constraints) library"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Mattia Piazza", email = "mattia.piazza@unitn.it" }]
+requires-python = ">=3.9"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.urls]
+Homepage = "https://github.com/DRIVEWISE/FBGA"
+
+[tool.scikit-build]
+minimum-version = "0.10"
+wheel.install-dir = "."
+wheel.packages = []
+install.components = ["python_module"]
+
+[tool.scikit-build.cmake.define]
+FBGA_BUILD_PYTHON = "ON"
+FBGA_BUILD_TESTS = "OFF"
+FBGA_BUILD_EXAMPLES = "OFF"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "CMakeLists.txt"
+regex = "VERSION\\s+(?P<value>[0-9]+\\.[0-9]+\\.[0-9]+)"
