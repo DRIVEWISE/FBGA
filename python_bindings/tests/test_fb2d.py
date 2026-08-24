@@ -95,9 +95,9 @@ def test_evaluate_matches_pointwise_eval(solver, track):
     SS_eval, KK_eval = track
     solver.compute(SS_eval, KK_eval, 20.0)
 
-    AX, AY, V = solver.evaluate(SS_eval)
+    AX, AY, V, TT = solver.evaluate(SS_eval)
 
-    assert len(AX) == len(AY) == len(V) == len(SS_eval)
+    assert len(AX) == len(AY) == len(V) == len(TT) == len(SS_eval)
     for i, s in enumerate(SS_eval):
         assert V[i] == pytest.approx(solver.evalV(s))
         assert AX[i] == pytest.approx(solver.evalAx(s))

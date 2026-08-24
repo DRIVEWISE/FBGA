@@ -15,6 +15,21 @@ using namespace fb::solvers;
 
 constexpr size_t DEFAULT_SIZE{100};
 
+namespace
+{
+// Resize AX, AY, V, and the companion vector to length n if any of them mismatches.
+void resize_to(size_t n, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V, std::vector<real> &other)
+{
+  if (AX.size() != n || AY.size() != n || V.size() != n || other.size() != n)
+  {
+    AX.resize(n);
+    AY.resize(n);
+    V.resize(n);
+    other.resize(n);
+  }
+}
+} // namespace
+
 // --------------------------------------------------------------------------------------------
 
 Fb2d::Fb2d(
@@ -436,7 +451,7 @@ void Fb2d::BW()
 // --------------------------------------------------------------------------------------------
 
 void Fb2d::evaluate(
-  std::vector<real> const &SS, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V
+  std::vector<real> const &SS, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V, std::vector<real> &TT
 )
 {
   for (integer i = 0; i < (integer) SS.size(); i++)
@@ -455,6 +470,7 @@ void Fb2d::evaluate(
       AX[i] = segment_it->AX(s_rel);
       AY[i] = segment_it->AY(s_rel);
       V[i]  = segment_it->V(s_rel);
+      TT[i] = segment_it->getT0() + segment_it->t(s_rel);
     }
     else
     {
@@ -463,6 +479,56 @@ void Fb2d::evaluate(
       AX[i] = AY[i] = V[i] = 0.0;
     }
   }
+}
+
+// --------------------------------------------------------------------------------------------
+
+void Fb2d::evaluate( Solution2D &sol )
+{
+  resize_to(sol.S.size(), sol.AX, sol.AY, sol.V, sol.T);
+  this->evaluate(sol.S, sol.AX, sol.AY, sol.V, sol.T);
+}
+
+// --------------------------------------------------------------------------------------------
+
+void Fb2d::evaluate_t(
+  std::vector<real> const &TT, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V, std::vector<real> &SS
+)
+{
+  for (integer i = 0; i < (integer) TT.size(); i++)
+  {
+    real t = TT[i];
+    // Find the segment that contains t
+    auto segment_it = std::find_if(
+      this->Segments.begin(),
+      this->Segments.end(),
+      [t](const Segment &seg) { return t >= seg.getT0() && t <= seg.getT1(); }
+    );
+    if (segment_it != this->Segments.end())
+    {
+      // Populate AX, AY, V, and SS using the found segment
+      const real s0 = segment_it->s0();
+      SS[i] = segment_it->S(t);
+      const real s_rel = segment_it->S(t) - s0;
+      AX[i] = segment_it->AX(s_rel);
+      AY[i] = segment_it->AY(s_rel);
+      V[i]  = segment_it->V(s_rel);
+    }
+    else
+    {
+      // Handle the case where no segment is found
+      std::cerr << "Error: No segment found for t = " << t << "\n";
+      AX[i] = AY[i] = V[i] = SS[i] = 0.0;
+    }
+  }
+}
+
+// --------------------------------------------------------------------------------------------
+
+void Fb2d::evaluate_t( Solution2D &sol )
+{
+  resize_to(sol.T.size(), sol.AX, sol.AY, sol.V, sol.S);
+  this->evaluate_t(sol.T, sol.AX, sol.AY, sol.V, sol.S);
 }
 
 // --------------------------------------------------------------------------------------------

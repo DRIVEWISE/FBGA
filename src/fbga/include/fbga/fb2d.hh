@@ -41,6 +41,15 @@ using SolverParams = struct SolverParams
   std::string verbosity = STD_VERBOSE;
 };
 
+using Solution2D = struct Solution2D
+{
+  std::vector<real> S;
+  std::vector<real> AX;
+  std::vector<real> AY;
+  std::vector<real> V;
+  std::vector<real> T;
+};
+
 #define VMAX_SPEED 130.0
 
 class Fb2d
@@ -98,8 +107,13 @@ public:
   [[nodiscard]] bool is_in_range(real ax, real ay, real v) const;
   // evaluation
   void evaluate(
-    std::vector<real> const &SS, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V
+    std::vector<real> const &SS, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V, std::vector<real> &TT
   );
+  void evaluate( Solution2D &sol );
+  void evaluate_t(
+    std::vector<real> const &TT, std::vector<real> &AX, std::vector<real> &AY, std::vector<real> &V, std::vector<real> &SS
+  );
+  void evaluate_t( Solution2D &sol );
   [[nodiscard]] real evalV(real s) const;
   [[nodiscard]] real evalT(real s) const;
   [[nodiscard]] real evalAx(real s) const;
