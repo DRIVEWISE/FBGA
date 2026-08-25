@@ -39,15 +39,9 @@ struct AeroData{
 // maximum acceelration due to the engine
 
 real ax_max_engine(real v, const AeroData& aero_data) {
-  const auto b     = aero_data.b;
-  const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h;
-  const auto mu_X  = aero_data.mu_X;
-  const auto mu_Y  = aero_data.mu_Y;
   const auto c_a_0 = aero_data.c_a_0;
   const auto c_a_1 = aero_data.c_a_1;
   const auto c_a_2 = aero_data.c_a_2;
-  const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
   const auto m     = aero_data.m;
   const auto P     = aero_data.P;
@@ -58,18 +52,12 @@ real ax_max_engine(real v, const AeroData& aero_data) {
 // minimum acceleration from adherence ellipse
 
 real ax_min_adherence(real ayg, real v, const AeroData& aero_data) {
-  const auto b     = aero_data.b;
-  const auto L_W   = aero_data.L_W;
-  const auto h     = aero_data.h;
   const auto mu_X  = aero_data.mu_X;
   const auto mu_Y  = aero_data.mu_Y;
   const auto c_a_0 = aero_data.c_a_0;
   const auto c_a_1 = aero_data.c_a_1;
   const auto c_a_2 = aero_data.c_a_2;
-  const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
-  const auto m     = aero_data.m;
-  const auto P     = aero_data.P;
   //
   const auto ay = ayg / g;
   //
@@ -82,15 +70,11 @@ real ax_min_stoppie(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
   const auto L_W   = aero_data.L_W;
   const auto h     = aero_data.h;
-  const auto mu_X  = aero_data.mu_X;
-  const auto mu_Y  = aero_data.mu_Y;
   const auto c_a_0 = aero_data.c_a_0;
   const auto c_a_1 = aero_data.c_a_1;
   const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
-  const auto m     = aero_data.m;
-  const auto P     = aero_data.P;
   //
   const auto ay = ayg / g;
   //
@@ -101,17 +85,12 @@ real ax_min_stoppie(real ayg, real v, const AeroData& aero_data) {
 
 real ax_max_wheeling(real ayg, real v, const AeroData& aero_data) {
   const auto b     = aero_data.b;
-  const auto L_W   = aero_data.L_W;
   const auto h     = aero_data.h;
-  const auto mu_X  = aero_data.mu_X;
-  const auto mu_Y  = aero_data.mu_Y;
   const auto c_a_0 = aero_data.c_a_0;
   const auto c_a_1 = aero_data.c_a_1;
   const auto c_a_2 = aero_data.c_a_2;
   const auto h_a   = aero_data.h_a;
   const auto g     = aero_data.g;
-  const auto m     = aero_data.m;
-  const auto P     = aero_data.P;
   //
   const auto ay = ayg / g;
   //

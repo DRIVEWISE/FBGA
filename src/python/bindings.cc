@@ -87,12 +87,22 @@ PYBIND11_MODULE(fbga_py, m) {
            [](Fb2d &self, const std::vector<real> &SS) {
              // Fb2d::evaluate writes into AX/AY/V via operator[] without
              // resizing them itself, so the caller must pre-size them.
-             std::vector<real> AX(SS.size()), AY(SS.size()), V(SS.size());
-             self.evaluate(SS, AX, AY, V);
-             return std::make_tuple(AX, AY, V);
+             std::vector<real> AX(SS.size()), AY(SS.size()), V(SS.size()), TT(SS.size());
+             self.evaluate(SS, AX, AY, V, TT);
+             return std::make_tuple(AX, AY, V, TT);
            },
-           "Evaluate acceleration and velocity at given positions; returns (AX, AY, V)",
+           "Evaluate acceleration, velocity and time at given positions; returns (AX, AY, V, TT)",
            py::arg("SS"))
+      .def("evaluate_t",
+           [](Fb2d &self, const std::vector<real> &TT) {
+               // Fb2d::evaluate_t writes into AX/AY/V via operator[] without
+               // resizing them itself, so the caller must pre-size them.
+               std::vector<real> AX(TT.size()), AY(TT.size()), V(TT.size()), SS(TT.size());
+               self.evaluate_t(TT, AX, AY, V, SS);
+               return std::make_tuple(AX, AY, V, SS);
+           },
+           "Evaluate acceleration, velocity and position at given times; returns (AX, AY, V, SS)",
+           py::arg("TT"))
       .def("evalV", &Fb2d::evalV,
            "Evaluate velocity at position s",
            py::arg("s"))
