@@ -62,7 +62,10 @@ jobs:
         with:
           path: dist
           merge-multiple: true
-
+          
+      - name: Inspect downloaded artifacts
+        run: find dist -maxdepth 2 -type f | sort
+        
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
