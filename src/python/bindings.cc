@@ -289,7 +289,8 @@ PYBIND11_MODULE(fbga_py, m) {
       .def("a_x_eng", &GggvIndy::a_x_eng, py::arg("V"))
       .def("a_x_max", &GggvIndy::a_x_max, py::arg("V"), py::arg("az_tilde"))
       .def("a_x_min", &GggvIndy::a_x_min, py::arg("V"), py::arg("az_tilde"))
-      .def("a_y_lim", &GggvIndy::a_y_lim, py::arg("V"), py::arg("az_tilde"));
+      .def("a_y_max", &GggvIndy::a_y_max, py::arg("V"), py::arg("az_tilde"))
+      .def("a_y_min", &GggvIndy::a_y_min, py::arg("V"), py::arg("az_tilde"));
 
   py::class_<GggvMoto>(m, "GggvMoto")
       .def(py::init<>())
@@ -297,7 +298,8 @@ PYBIND11_MODULE(fbga_py, m) {
       .def("a_x_pull", &GggvMoto::a_x_pull, py::arg("ay_tilde"), py::arg("V"), py::arg("az_tilde"), py::arg("alpha") = 1.0)
       .def("a_x_neutral", &GggvMoto::a_x_neutral, py::arg("V"))
       .def("a_x_eng", &GggvMoto::a_x_eng, py::arg("V"))
-      .def("a_y_lim", &GggvMoto::a_y_lim, py::arg("V"), py::arg("az_tilde"))
+      .def("a_y_max", &GggvMoto::a_y_max, py::arg("V"), py::arg("az_tilde"))
+      .def("a_y_min", &GggvMoto::a_y_min, py::arg("V"), py::arg("az_tilde"))
       .def("a_x_aero", &GggvMoto::a_x_aero, py::arg("V"));
 
   // FbgaIndy/FbgaMoto: Fbga3dSolver<GggvIndy>/<GggvMoto> -- see fbga3d_solver.hh. Plotting

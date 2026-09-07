@@ -334,7 +334,7 @@ GggvIndy gggv(spline_data_collection);              // fully custom spline data,
 GggvMoto gggv;  // default MotoData
 ```
 
-Any type implementing `a_x_push`/`a_x_pull`/`a_x_neutral`/`a_x_eng`/`a_y_lim` with the same signatures as `GggvIndy`/`GggvMoto` can be used as the `GggvModel` template parameter for a new `Fbga3dSolver<YourModel>` instantiation.
+Any type implementing `a_x_push`/`a_x_pull`/`a_x_neutral`/`a_x_eng`/`a_y_max`/`a_y_min` with the same signatures as `GggvIndy`/`GggvMoto` can be used as the `GggvModel` template parameter for a new `Fbga3dSolver<YourModel>` instantiation.
 
 ### Constructor and Setup
 

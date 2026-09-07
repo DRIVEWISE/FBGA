@@ -24,7 +24,7 @@ GggvMoto::GggvMoto()
 real
 GggvMoto::a_x_push(real ay_tilde, real V, real az_tilde, real alpha) const
 {
-  const real a_y_lim = alpha * this->a_y_lim(V, az_tilde);
+  const real a_y_lim = alpha * this->a_y_max(V, az_tilde);
   const real ay_clip = std::clamp(ay_tilde, -a_y_lim, a_y_lim);
   real const a_x_max_adherence = this->constraint_ax_max_adherence(ay_clip, az_tilde, V);
   real const a_x_max_wheeling = this->constraint_ax_max_wheeling(ay_clip, az_tilde, V);
@@ -35,7 +35,7 @@ GggvMoto::a_x_push(real ay_tilde, real V, real az_tilde, real alpha) const
 real
 GggvMoto::a_x_pull(real ay_tilde, real V, real az_tilde, real alpha) const
 {
-  const real a_y_lim = alpha * this->a_y_lim(V, az_tilde);
+  const real a_y_lim = alpha * this->a_y_max(V, az_tilde);
   const real ay_clip = std::clamp(ay_tilde, -a_y_lim, a_y_lim);
   real const a_x_min_adherence = this->constraint_ax_min_adherence(ay_clip, az_tilde, V);
   real const a_x_min_stoppie = this->constraint_ax_min_stoppie(ay_clip, az_tilde, V);
@@ -72,9 +72,15 @@ GggvMoto::a_x_aero(real V) const
 }
 
 real
-GggvMoto::a_y_lim(real V, real az_tilde) const
+GggvMoto::a_y_max(real V, real az_tilde) const
 {
   return this->constraint_ay_lim_adherence(az_tilde, V);
+}
+
+real
+GggvMoto::a_y_min(real V, real az_tilde) const
+{
+  return -this->a_y_max(V, az_tilde);
 }
 
 real

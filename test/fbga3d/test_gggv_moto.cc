@@ -14,11 +14,19 @@ TEST_CASE("GggvMoto::a_x_eng decreases with speed (power-limited)", "[fbga3d][gg
   CHECK(a_high < a_low);
 }
 
-TEST_CASE("GggvMoto::a_y_lim is symmetric adherence-only bound", "[fbga3d][gggv_moto]")
+TEST_CASE("GggvMoto::a_y_max is symmetric adherence-only bound", "[fbga3d][gggv_moto]")
 {
   GggvMoto gggv;
   const real az_tilde = 9.81;
-  CHECK(gggv.a_y_lim(20.0, az_tilde) == Approx(az_tilde * MotoData{}.mu_Y));
+  CHECK(gggv.a_y_max(20.0, az_tilde) == Approx(az_tilde * MotoData{}.mu_Y));
+}
+
+TEST_CASE("GggvMoto::a_y_min is the negative of a_y_max (symmetric model)", "[fbga3d][gggv_moto]")
+{
+  GggvMoto gggv;
+  const real V = 20.0;
+  const real az_tilde = 9.81;
+  CHECK(gggv.a_y_min(V, az_tilde) == Approx(-gggv.a_y_max(V, az_tilde)));
 }
 
 TEST_CASE("GggvMoto::a_x_push/a_x_pull bracket zero lateral acceleration", "[fbga3d][gggv_moto]")
@@ -38,7 +46,7 @@ TEST_CASE("GggvMoto::a_x_push shrinks towards zero as lateral acceleration appro
   GggvMoto gggv;
   const real V = 10.0;
   const real az_tilde = 9.81;
-  const real a_y_lim = gggv.a_y_lim(V, az_tilde);
+  const real a_y_lim = gggv.a_y_max(V, az_tilde);
   const real a_x_center = gggv.a_x_push(0.0, V, az_tilde);
   const real a_x_at_limit = gggv.a_x_push(a_y_lim, V, az_tilde);
   CHECK(a_x_at_limit < a_x_center);

@@ -445,8 +445,12 @@ private:
   [[nodiscard]] real max_lateral_performance_func(NodeStruct3D const &node, real V) const
   {
     const real V_dot = this->eval_V_dot_Vatildex(node, V, this->gggv.a_x_neutral(V));
-    return std::abs(this->eval_a_tilde_y(node, V)) -
-           (this->eval_a_tilde_y_lim(node, V, V_dot) + this->m_lat_tol - this->m_lat_tol_vmax) * this->m_lateral_shrink_factor;
+    const real a_tilde_y = this->eval_a_tilde_y(node, V);
+    const real lim_max = (this->eval_a_tilde_y_max(node, V, V_dot) + this->m_lat_tol - this->m_lat_tol_vmax) *
+                          this->m_lateral_shrink_factor;
+    const real lim_min = (this->eval_a_tilde_y_min(node, V, V_dot) - this->m_lat_tol + this->m_lat_tol_vmax) *
+                          this->m_lateral_shrink_factor;
+    return std::max(a_tilde_y - lim_max, lim_min - a_tilde_y);
   }
 
   [[nodiscard]] real get_max_longitudinal_performance(NodeStruct3D const &node, real V)
@@ -831,8 +835,9 @@ private:
     ctx.a_tilde_y = st.a_tilde_y;
     ctx.a_tilde_z = w_dot - (st.omega_hat_y * V) + node.g_z;
 
-    ctx.a_tilde_y_lim = (node.alpha * this->gggv.a_y_lim(V, ctx.a_tilde_z) - this->m_lat_tol);
-    ctx.a_tilde_y_clip = clip(ctx.a_tilde_y, -ctx.a_tilde_y_lim, ctx.a_tilde_y_lim);
+    ctx.a_tilde_y_max = (node.alpha * this->gggv.a_y_max(V, ctx.a_tilde_z) - this->m_lat_tol);
+    ctx.a_tilde_y_min = (node.alpha * this->gggv.a_y_min(V, ctx.a_tilde_z) + this->m_lat_tol);
+    ctx.a_tilde_y_clip = clip(ctx.a_tilde_y, ctx.a_tilde_y_min, ctx.a_tilde_y_max);
 
     ctx.a_tilde_x_max_gg = this->gggv.a_x_push(ctx.a_tilde_y_clip, V, ctx.a_tilde_z, node.alpha);
     ctx.a_tilde_x_min_gg = this->gggv.a_x_pull(ctx.a_tilde_y_clip, V, ctx.a_tilde_z, node.alpha);
@@ -841,13 +846,14 @@ private:
     ctx.a_tilde_x_max = std::min(ctx.a_tilde_x_max_gg, ctx.a_tilde_x_eng);
     ctx.a_tilde_x_min = ctx.a_tilde_x_min_gg;
 
-    ctx.at_lateral_limit = (std::abs(ctx.a_tilde_y_clip) >= ctx.a_tilde_y_lim);
+    ctx.at_lateral_limit = (ctx.a_tilde_y_clip >= ctx.a_tilde_y_max) || (ctx.a_tilde_y_clip <= ctx.a_tilde_y_min);
     if (ctx.at_lateral_limit)
     {
       ctx.a_tilde_x_max = std::min(0.0, ctx.a_tilde_x_eng);
       ctx.a_tilde_x_min = std::max(0.0, ctx.a_tilde_x_min);
     }
-    if ((std::abs(ctx.a_tilde_y) - ctx.a_tilde_y_lim) > this->solver_p.tolerance)
+    if (((ctx.a_tilde_y - ctx.a_tilde_y_max) > this->solver_p.tolerance) ||
+        ((ctx.a_tilde_y_min - ctx.a_tilde_y) > this->solver_p.tolerance))
     {
       ctx.a_tilde_x_max = std::min(0.0, ctx.a_tilde_x_eng);
       ctx.a_tilde_x_min = std::max(0.0, ctx.a_tilde_x_min);
@@ -859,18 +865,21 @@ private:
     Context ctx;
     this->compute_context(node, V, V_dot, ctx);
     return fb::utils::signed_distance(
-      ctx.a_tilde_x, ctx.a_tilde_x_min, ctx.a_tilde_x_max, ctx.a_tilde_y, -ctx.a_tilde_y_lim, ctx.a_tilde_y_lim
+      ctx.a_tilde_x, ctx.a_tilde_x_min, ctx.a_tilde_x_max, ctx.a_tilde_y, ctx.a_tilde_y_min, ctx.a_tilde_y_max
     );
   }
 
   [[nodiscard]] real signed_distance_YF(NodeStruct3D const &node, real V, real V_dot) const
   {
     const real a_tilde_y = this->eval_a_tilde_y(node, V);
-    const real a_tilde_lim_y = (this->eval_a_tilde_y_lim(node, V, V_dot) - this->m_lat_tol);
+    const real a_tilde_y_max = (this->eval_a_tilde_y_max(node, V, V_dot) - this->m_lat_tol);
+    const real a_tilde_y_min = (this->eval_a_tilde_y_min(node, V, V_dot) + this->m_lat_tol);
     const real a_tilde_x_max = this->eval_a_tilde_x_max(node, V, V_dot);
     const real a_tilde_x_min = this->eval_a_tilde_x_min_YF(node, V, V_dot);
     const real a_tilde_x = this->eval_a_tilde_x(node, V, V_dot);
-    return fb::utils::signed_distance(a_tilde_x, a_tilde_x_min, a_tilde_x_max, a_tilde_y, -a_tilde_lim_y, a_tilde_lim_y);
+    return fb::utils::signed_distance(
+      a_tilde_x, a_tilde_x_min, a_tilde_x_max, a_tilde_y, a_tilde_y_min, a_tilde_y_max
+    );
   }
 
   [[nodiscard]] static real eval_V_next(NodeStruct3D const &node, CellStruct3D const &cell, real VDOT)
@@ -990,10 +999,16 @@ private:
     return w_dot - (st.omega_hat_y * V);
   }
 
-  [[nodiscard]] real eval_a_tilde_y_lim(NodeStruct3D const &node, real V, real V_dot) const
+  [[nodiscard]] real eval_a_tilde_y_max(NodeStruct3D const &node, real V, real V_dot) const
   {
     const real a_tilde_z = this->eval_a_tilde_z(node, V, V_dot);
-    return node.alpha * this->gggv.a_y_lim(V, a_tilde_z);
+    return node.alpha * this->gggv.a_y_max(V, a_tilde_z);
+  }
+
+  [[nodiscard]] real eval_a_tilde_y_min(NodeStruct3D const &node, real V, real V_dot) const
+  {
+    const real a_tilde_z = this->eval_a_tilde_z(node, V, V_dot);
+    return node.alpha * this->gggv.a_y_min(V, a_tilde_z);
   }
 
   [[nodiscard]] real eval_a_tilde_x_max(NodeStruct3D const &node, real V, real V_dot) const

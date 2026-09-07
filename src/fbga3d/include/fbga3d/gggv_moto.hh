@@ -42,7 +42,8 @@ public:
   [[nodiscard]] real a_x_neutral(real V) const;
 
   [[nodiscard]] real a_x_eng(real V) const;
-  [[nodiscard]] real a_y_lim(real V, real az_tilde) const;
+  [[nodiscard]] real a_y_max(real V, real az_tilde) const;
+  [[nodiscard]] real a_y_min(real V, real az_tilde) const;
 
   [[nodiscard]] real a_x_aero(real V) const;
 
