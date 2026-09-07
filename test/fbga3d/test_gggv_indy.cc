@@ -45,3 +45,11 @@ TEST_CASE("GggvIndy::set_scaling_factors rescales a_x_max linearly", "[fbga3d][g
 
   CHECK(gggv.a_x_max(V, az_tilde) == Approx(baseline * 0.5));
 }
+
+TEST_CASE("GggvIndy::a_y_min is the negative of a_y_max (symmetric model)", "[fbga3d][gggv_indy]")
+{
+  GggvIndy gggv;
+  const real V = 30.0;
+  const real az_tilde = 10.0;
+  CHECK(gggv.a_y_min(V, az_tilde) == Approx(-gggv.a_y_max(V, az_tilde)));
+}

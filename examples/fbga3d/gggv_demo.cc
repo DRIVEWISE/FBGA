@@ -27,7 +27,7 @@ int main()
   {
     const real V = 20.0;
     const real az_tilde = 9.81;
-    const real a_y_lim = gggv_moto.a_y_lim(V, az_tilde);
+    const real a_y_lim = gggv_moto.a_y_max(V, az_tilde);
     std::cout << "\nGG envelope at V = " << V << " m/s, az_tilde = " << az_tilde << " m/s^2:\n";
     for (real ay = -a_y_lim; ay <= a_y_lim; ay += a_y_lim / 2.0)
     {
@@ -45,7 +45,7 @@ int main()
   {
     const real V = 30.0;
     const real az_tilde = 10.0;
-    const real a_y_lim = gggv_indy.a_y_lim(V, az_tilde);
+    const real a_y_lim = gggv_indy.a_y_max(V, az_tilde);
     std::cout << "GG envelope at V = " << V << " m/s, az_tilde = " << az_tilde << " m/s^2:\n";
     for (real ay = -a_y_lim; ay <= a_y_lim; ay += a_y_lim / 2.0)
     {

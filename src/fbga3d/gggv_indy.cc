@@ -106,7 +106,7 @@ real
 GggvIndy::a_x_push(real ay_tilde, real V, real az_tilde, real alpha) const
 {
   const real a_x_max_raw = this->a_x_max(V, az_tilde);
-  const real a_y_lim = alpha * this->a_y_lim(V, az_tilde);
+  const real a_y_lim = alpha * this->a_y_max(V, az_tilde);
   const real rho_max = this->rho_max(V, az_tilde);
   const real a_x_eng = this->a_x_eng(V);
   const real ay_tilde_abs = std::abs(ay_tilde);
@@ -128,7 +128,7 @@ real
 GggvIndy::a_x_pull(real ay_tilde, real V, real az_tilde, real alpha) const
 {
   const real a_x_min_raw = this->a_x_min(V, az_tilde);
-  const real a_y_lim = alpha * this->a_y_lim(V, az_tilde);
+  const real a_y_lim = alpha * this->a_y_max(V, az_tilde);
   const real rho_min = this->rho_min(V, az_tilde);
   const real ay_tilde_abs = std::abs(ay_tilde);
   const real ay_tilde_absclip = std::min(ay_tilde_abs, a_y_lim);
@@ -186,9 +186,15 @@ GggvIndy::a_x_min(real V, real az_tilde) const
 }
 
 real
-GggvIndy::a_y_lim(real V, real az_tilde) const
+GggvIndy::a_y_max(real V, real az_tilde) const
 {
   return this->m_ay_max_bilinear.eval(V, az_tilde) * this->m_scaling_factors.ay_scale;
+}
+
+real
+GggvIndy::a_y_min(real V, real az_tilde) const
+{
+  return -this->a_y_max(V, az_tilde);
 }
 
 } // namespace fb::fbga3d

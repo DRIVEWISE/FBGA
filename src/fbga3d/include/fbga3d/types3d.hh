@@ -165,7 +165,7 @@ struct Context
 {
   real a_tilde_x{0}, a_tilde_y{0}, a_tilde_z{0};
 
-  real a_tilde_y_lim{0}, a_tilde_y_clip{0};
+  real a_tilde_y_max{0}, a_tilde_y_min{0}, a_tilde_y_clip{0};
   // Already-combined (envelope + engine cap, per-model alpha convention baked in via
   // GggvModel::a_x_push/a_x_pull) longitudinal bounds -- see FBGA3D_INTEGRATION_PLAN.md.
   real a_tilde_x_max_gg{0}, a_tilde_x_min_gg{0}, a_tilde_x_eng{0};
