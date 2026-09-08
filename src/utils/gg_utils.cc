@@ -221,10 +221,7 @@ namespace fb::utils
   {
     size_type seg = 0;
     // Check if the guess is within bounds
-    if (guess >= vec.size() - 1 || guess < 0)
-    {
-      guess = 0;
-    }
+    guess = std::clamp(guess, static_cast<size_type>(0), vec.size() - 2);
 
     // Check if the value is within the range of vec
     if (value >= vec.front() && value <= vec.back())
