@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 128.13">
+  <defs>
+    <mask id="fbga-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="220" height="128.13">
+      <rect x="0" y="0" width="220" height="128.13" fill="white"/>
+      <text x="65" y="119.13" text-anchor="middle" font-family="Helvetica Neue Condensed, Arial Narrow, Arial, sans-serif" font-weight="800" font-size="36" fill="black">F</text>
+    <text x="95" y="119.13" text-anchor="middle" font-family="Helvetica Neue Condensed, Arial Narrow, Arial, sans-serif" font-weight="800" font-size="36" fill="black">B</text>
+    <text x="125" y="119.13" text-anchor="middle" font-family="Helvetica Neue Condensed, Arial Narrow, Arial, sans-serif" font-weight="800" font-size="36" fill="black">G</text>
+    <text x="155" y="119.13" text-anchor="middle" font-family="Helvetica Neue Condensed, Arial Narrow, Arial, sans-serif" font-weight="800" font-size="36" fill="black">A</text>
+    </mask>
+  </defs>
+  <g mask="url(#fbga-cutout)">
+    <path fill="#1E90FF" d="M10,125.13 L10,115 Q60,15 110,10 L110,125.13 Z"/>
+    <path fill="#FF8C00" d="M110,125.13 L110,10 Q160,110 210,115 L210,125.13 Z"/>
+  </g>
+</svg>

@@ -1,6 +1,10 @@
 FBGA
 =========
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/DRIVEWISE/FBGA/main/assets/logo/fbga-badge-carved-512.png" alt="FBGA logo" width="220">
+</p>
+
 FBGA - Forward Backward Generic Acceleration constraints is a library specifically developed to solve optimal velocity profile given a complex g-g-v constraint envelope the described implementation is under review in the Robotics and Automation Letters (RAL) journal.
 This library will later evolve into a generic tool including multiple dimensions constraints and a more general approach to the problem.
 The library is able to compute the maximum performance longitudinal maneuver given a generic g-g-v envelope and a curvature profile (i.e., the trajectory path).
